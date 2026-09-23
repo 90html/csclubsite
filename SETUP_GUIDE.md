@@ -122,13 +122,11 @@ When all seven are done, click **Publish** and check each page on the live site,
 
 | # | What | Where it goes |
 |---|---|---|
-| 1 | **Points sheet link.** In Sheets: File → Share → Publish to web → the points tab → **CSV** → Publish, then copy the link. Also confirm your column headers (default: `Name, Meetings, Problems, Contests, Total`). ⚠️ Published sheets are **public**, so use first name + last initial. | `config.js` → `POINTS.POINTS_SHEET_URL` and `POINTS.COLUMNS` |
-| 2 | **Google Calendar ID** (Calendar settings → Integrate calendar) with the calendar set to public, plus a **Calendar API key** restricted to your site's domain(s) (README → Calendar) | `config.js` → `CALENDAR.CALENDAR_ID`, `CALENDAR.CALENDAR_API_KEY` |
-| 3 | **Slide links** after each meeting, plus optional cover images | `data/slides.json` → `slidesUrl`, `coverImage`. Delete the sample entries. |
-| 4 | **Point values** for a meeting, a problem and a contest | `config.js` → `POINTS.POINT_VALUES` |
-| 5 | **Club email** (the old site's address was hidden from the crawler) | `config.js` → `CLUB_EMAIL` |
-| 6 | **Meeting day, time, room** | `config.js` → `MEETING` |
-| 7 | *Optional:* officer photos, social links (confirm whether `@dhscompsci` on Instagram is yours), a current Remind code, club photos | `data/officers.json` → `photo`, `config.js` → `SOCIAL` / `REMIND_CODE`, `assets/images/originals/` + `npm run images` |
-| 8 | **Hosting choice** (A or B) and your custom domain, if any | `config.js` → `SITE_URL`, then `npm run build` |
+| 1 | **Google Calendar ID** (Calendar settings → Integrate calendar) with the calendar set to public, plus a **Calendar API key** restricted to your site's domain (README → Calendar). Until then, the calendar shows the regular every-other-Monday schedule. | `config.js` → `CALENDAR.CALENDAR_ID`, `CALENDAR.CALENDAR_API_KEY` |
+| 2 | **Check the points sheet on the live site.** Its link is already set. If the columns don't come out right, tell me the header names. ⚠️ Published sheets are **public**, so use first name + last initial. | `config.js` → `POINTS.COLUMNS` |
+| 3 | **Point values** for a meeting, a problem and a contest | `config.js` → `POINTS.POINT_VALUES` |
+| 4 | **Meeting room**, and how long meetings last (60 minutes is assumed) | `config.js` → `MEETING.room`, `MEETING.SCHEDULE.durationMinutes`, `MEETING.endTime24` |
+| 5 | **Slide links** after each meeting, plus optional cover images. Delete the sample entries once real meetings are in. | `data/slides.json` |
+| 6 | *Optional:* club photos, officer photos, social links | `assets/images/originals/` + `npm run images`, `data/officers.json` → `photo`, `config.js` → `SOCIAL` |
 
 Add `?setup` to any page URL to see which of these are still missing.
