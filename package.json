@@ -1,0 +1,19 @@
+{
+  "name": "dhs-cs-club-site",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Dulles High School Computer Science Club website (static, no build required to run).",
+  "type": "module",
+  "scripts": {
+    "serve": "node tools/serve.mjs",
+    "build": "node tools/build.mjs",
+    "images": "node tools/images.mjs",
+    "brand": "node tools/brand.mjs",
+    "test": "node tools/test.mjs"
+  },
+  "devDependencies": {
+    "esbuild": "^0.28.2",
+    "playwright-core": "^1.55.0",
+    "sharp": "^0.35.4"
+  }
+}

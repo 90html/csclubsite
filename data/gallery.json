@@ -1,0 +1,4 @@
+{
+  "_README": "Photos for the Home page 'Moments' gallery. Easiest: drop photos in assets/images/originals/ and run `npm run images` — this file is updated for you (then edit the alt text!). The gallery stays hidden while this list is empty.",
+  "photos": []
+}

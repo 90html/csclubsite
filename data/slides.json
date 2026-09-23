@@ -1,0 +1,71 @@
+{
+  "_README": "One object per meeting. Newest can go anywhere — the site sorts by date. Fields: id (unique, no spaces), title, date (YYYY-MM-DD or full ISO), tags (list), description (one line), coverImage (optional, e.g. 'assets/slides/java-basics.webp'), slidesUrl (paste the Google Slides/PDF link AFTER the meeting; leave '' until then), availableFrom (optional ISO datetime — defaults to the meeting date at MEETING.endTime24 in config.js). Entries with \"placeholder\": true are SAMPLE cards — delete them once you add real meetings. A slidesUrl of '#demo' is a sample link.",
+  "slides": [
+    {
+      "id": "2026-08-27-kickoff",
+      "placeholder": true,
+      "title": "Kickoff: Welcome to CS Club",
+      "date": "2026-08-27",
+      "tags": ["Club", "Intro"],
+      "description": "What the club does, how points work, and the plan for contest season.",
+      "coverImage": "",
+      "slidesUrl": "#demo",
+      "availableFrom": ""
+    },
+    {
+      "id": "2026-09-03-setup",
+      "placeholder": true,
+      "title": "Set Up Your Java Environment",
+      "date": "2026-09-03",
+      "tags": ["Java", "Setup"],
+      "description": "Install the JDK and an IDE, then run your first program.",
+      "coverImage": "",
+      "slidesUrl": "#demo",
+      "availableFrom": ""
+    },
+    {
+      "id": "2026-09-10-java-basics",
+      "placeholder": true,
+      "title": "Java Basics: Variables & Types",
+      "date": "2026-09-10",
+      "tags": ["Java", "Beginner"],
+      "description": "Primitives, Strings, input with Scanner, and printing output.",
+      "coverImage": "",
+      "slidesUrl": "#demo",
+      "availableFrom": ""
+    },
+    {
+      "id": "2026-09-17-loops-arrays",
+      "placeholder": true,
+      "title": "Loops & Arrays",
+      "date": "2026-09-17",
+      "tags": ["Java", "Beginner"],
+      "description": "for, while, and arrays — the building blocks of every contest solution.",
+      "coverImage": "",
+      "slidesUrl": "#demo",
+      "availableFrom": ""
+    },
+    {
+      "id": "2026-09-24-strings",
+      "placeholder": true,
+      "title": "String Manipulation",
+      "date": "2026-09-24",
+      "tags": ["Java", "Problem Solving"],
+      "description": "substring, charAt, split and StringBuilder with contest-style practice.",
+      "coverImage": "",
+      "slidesUrl": "",
+      "availableFrom": ""
+    },
+    {
+      "id": "2026-10-01-uil-intro",
+      "placeholder": true,
+      "title": "Intro to UIL Computer Science",
+      "date": "2026-10-01",
+      "tags": ["Contests", "UIL"],
+      "description": "How the written test and programming round work, plus a mini practice set.",
+      "coverImage": "",
+      "slidesUrl": "",
+      "availableFrom": ""
+    }
+  ]
+}

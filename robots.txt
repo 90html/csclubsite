@@ -1,0 +1,5 @@
+User-agent: *
+Allow: /
+Disallow: /weebly-export/
+
+Sitemap: https://90html.github.io/csclubsite/sitemap.xml

@@ -1,0 +1,44 @@
+{
+  "_README": "Update this each year. 'photo' is optional: put a square image in assets/images/officers/ and write its path, e.g. 'assets/images/officers/kavish.webp'. Leave '' to show initials. Groups display in this order; 'featured': true makes a group's cards large.",
+  "groups": [
+    {
+      "title": "President",
+      "featured": true,
+      "members": [
+        { "name": "Kavish Mehta", "role": "President", "photo": "" }
+      ]
+    },
+    {
+      "title": "Vice Presidents",
+      "members": [
+        { "name": "Arnav Doshi", "role": "Vice President", "photo": "" },
+        { "name": "Ahaan Thota", "role": "Vice President", "photo": "" }
+      ]
+    },
+    {
+      "title": "Advanced Coaches",
+      "members": [
+        { "name": "Saharsh Maddi", "role": "Advanced Coach", "photo": "" },
+        { "name": "Arush Kankanala", "role": "Advanced Coach", "photo": "" }
+      ]
+    },
+    {
+      "title": "Novice Coaches",
+      "members": [
+        { "name": "Bhagat Kundoor", "role": "Novice Coach", "photo": "" },
+        { "name": "Neev Sankarrajan", "role": "Novice Coach", "photo": "" }
+      ]
+    },
+    {
+      "title": "Secretary & Historian",
+      "members": [
+        { "name": "Aarin Kumar", "role": "Secretary", "photo": "" },
+        { "name": "Soham Rananavare", "role": "Historian", "photo": "" }
+      ]
+    }
+  ],
+  "sponsors": [
+    { "name": "Mr. Rogers", "role": "Club Sponsor", "room": "B105", "photo": "" },
+    { "name": "Coach Garret", "role": "Club Sponsor", "room": "A-105", "photo": "" }
+  ]
+}
