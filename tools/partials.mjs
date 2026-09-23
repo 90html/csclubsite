@@ -74,8 +74,10 @@ const esc = (s) => String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replac
 /** Relative prefix from a page to the site root ("" or "../"). */
 export const rootFor = (page) => '../'.repeat(page.file.split('/').length - 1);
 
-export function headPartial(page, config) {
+/** @param {string} [iconVersion] cache-buster so browsers pick up a new favicon */
+export function headPartial(page, config, iconVersion = '') {
   const root = rootFor(page);
+  const v = iconVersion ? `?v=${iconVersion}` : '';
   const site = String(config.SITE_URL).replace(/\/+$/, '');
   const url = `${site}/${page.path}`;
   const og = `${site}/assets/og-image.png`;
@@ -108,17 +110,17 @@ export function headPartial(page, config) {
 <meta property="og:title" content="${esc(page.title)}">
 <meta property="og:description" content="${esc(page.description)}">
 <meta property="og:url" content="${esc(url)}">
-<meta property="og:image" content="${esc(og)}">
+<meta property="og:image" content="${esc(og)}${v}">
 <meta property="og:image:width" content="1200">
 <meta property="og:image:height" content="630">
 <meta property="og:image:alt" content="Dulles Computer Science Club: learn to code, compete, build.">
 <meta name="twitter:card" content="summary_large_image">
 <meta name="twitter:title" content="${esc(page.title)}">
 <meta name="twitter:description" content="${esc(page.description)}">
-<meta name="twitter:image" content="${esc(og)}">
-<link rel="icon" href="${root}assets/icons/favicon.svg" type="image/svg+xml">
-<link rel="icon" href="${root}assets/icons/favicon-32.png" sizes="32x32" type="image/png">
-<link rel="apple-touch-icon" href="${root}assets/icons/apple-touch-icon.png">
+<meta name="twitter:image" content="${esc(og)}${v}">
+<link rel="icon" href="${root}assets/icons/favicon.svg${v}" type="image/svg+xml">
+<link rel="icon" href="${root}assets/icons/favicon-32.png${v}" sizes="32x32" type="image/png">
+<link rel="apple-touch-icon" href="${root}assets/icons/apple-touch-icon.png${v}">
 <link rel="manifest" href="${root}site.webmanifest">
 <link rel="preload" href="${root}assets/fonts/inter-latin.woff2" as="font" type="font/woff2" crossorigin>
 <link rel="preload" href="${root}assets/fonts/space-grotesk-latin.woff2" as="font" type="font/woff2" crossorigin>

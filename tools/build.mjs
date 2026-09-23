@@ -23,6 +23,8 @@ const { hashString, isPlaceholder } = await import(pathToFileURL(join(ROOT, 'js/
 const { SOURCE: CAL_SOURCE, sourceNote } = await import(pathToFileURL(join(ROOT, 'js/lib/calendar-data.js')).href);
 
 const SITE = String(CONFIG.SITE_URL).replace(/\/+$/, '');
+// Changes whenever the favicon/OG image change, so browsers re-download them.
+const ICON_VERSION = hashString((await readFile(join(ROOT, 'assets/icons/favicon.svg'), 'utf8')) + (await readFile(join(ROOT, 'assets/og-image.png'))).length);
 const read = (p) => readFile(join(ROOT, p), 'utf8');
 const write = async (p, s) => {
   await mkdir(dirname(join(ROOT, p)), { recursive: true });
@@ -50,7 +52,7 @@ const officers = JSON.parse(await read('data/officers.json'));
 const built = {};
 for (const page of PAGES) {
   let html = await read(page.file);
-  html = replaceRegion(html, 'head', headPartial(page, CONFIG));
+  html = replaceRegion(html, 'head', headPartial(page, CONFIG, ICON_VERSION));
   html = replaceRegion(html, 'header', headerPartial(page));
   html = replaceRegion(html, 'footer', footerPartial(page, CONFIG));
   if (page.key === 'officers') {
@@ -81,7 +83,7 @@ for (const page of PAGES) {
   // SITE_URL's path on the live host (e.g. /csclubsite/ on GitHub Pages), "/" elsewhere.
   const site = new URL(`${SITE}/`);
   const baseScript = `<script>(function(){var b=document.createElement('base');b.href=location.hostname===${JSON.stringify(site.hostname)}?${JSON.stringify(site.pathname)}:'/';document.head.appendChild(b)})()</script>`;
-  html = replaceRegion(html, 'head', `${baseScript}\n${headPartial(fake, CONFIG).replace(/<link rel="canonical"[^>]*>\n/, '<meta name="robots" content="noindex">\n')}`);
+  html = replaceRegion(html, 'head', `${baseScript}\n${headPartial(fake, CONFIG, ICON_VERSION).replace(/<link rel="canonical"[^>]*>\n/, '<meta name="robots" content="noindex">\n')}`);
   html = replaceRegion(html, 'header', headerPartial(fake));
   html = replaceRegion(html, 'footer', footerPartial(fake, CONFIG));
   await write('404.html', fillIcons(html));
@@ -109,9 +111,9 @@ await write(
       background_color: '#060a17',
       theme_color: '#060a17',
       icons: [
-        { src: 'assets/icons/icon-192.png', sizes: '192x192', type: 'image/png' },
-        { src: 'assets/icons/icon-512.png', sizes: '512x512', type: 'image/png' },
-        { src: 'assets/icons/icon-maskable-512.png', sizes: '512x512', type: 'image/png', purpose: 'maskable' },
+        { src: `assets/icons/icon-192.png?v=${ICON_VERSION}`, sizes: '192x192', type: 'image/png' },
+        { src: `assets/icons/icon-512.png?v=${ICON_VERSION}`, sizes: '512x512', type: 'image/png' },
+        { src: `assets/icons/icon-maskable-512.png?v=${ICON_VERSION}`, sizes: '512x512', type: 'image/png', purpose: 'maskable' },
       ],
     },
     null,
@@ -192,12 +194,12 @@ for (const page of PAGES) {
   let html = built[page.key];
   // Head: same SEO tags, Google-hosted fonts, everything else inline.
   html = html.replace(/<!-- @head -->[\s\S]*?<!-- \/@head -->/, () => {
-    const head = headPartial(page, CONFIG)
+    const head = headPartial(page, CONFIG, ICON_VERSION)
       .split('\n')
       .filter((l) => !/rel="(icon|apple-touch-icon|manifest|preload|stylesheet|canonical)"/.test(l))
       .join('\n');
     return `${head}
-<link rel="icon" href="${SITE}/assets/icons/favicon.svg" type="image/svg+xml">
+<link rel="icon" href="${SITE}/assets/icons/favicon.svg?v=${ICON_VERSION}" type="image/svg+xml">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="${GOOGLE_FONTS}">
