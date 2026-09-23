@@ -16,7 +16,7 @@ const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), '..');
 const ICONS = join(ROOT, 'assets/icons');
 await mkdir(ICONS, { recursive: true });
 
-const GRAD = `<linearGradient id="g" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#ff4f6a"/><stop offset=".45" stop-color="#d6294d"/><stop offset="1" stop-color="#6d8cff"/></linearGradient>`;
+const GRAD = `<linearGradient id="g" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#bd1a3a"/><stop offset=".5" stop-color="#d4213f"/><stop offset="1" stop-color="#f0506a"/></linearGradient>`;
 const GLYPH = (stroke) => `<path d="M14.5 13.5 8.5 20l6 6.5M25.5 13.5l6 6.5-6 6.5M22.5 11.5l-5 17" fill="none" stroke="url(#g)" stroke-width="${stroke}" stroke-linecap="round" stroke-linejoin="round"/>`;
 
 /** Rounded-tile logo (favicon, touch icons). */
@@ -48,18 +48,18 @@ body{width:1200px;height:630px;overflow:hidden;background:#060a17;color:#eef1f8;
 .grid{position:absolute;inset:0;background-image:linear-gradient(rgba(255,255,255,.05) 1px,transparent 1px),linear-gradient(90deg,rgba(255,255,255,.05) 1px,transparent 1px);background-size:56px 56px;-webkit-mask-image:radial-gradient(ellipse 75% 80% at 70% 40%,#000 30%,transparent 80%)}
 .orb{position:absolute;border-radius:50%;filter:blur(90px)}
 .o1{width:620px;height:620px;right:-120px;top:-260px;background:#1f46d1;opacity:.5}
-.o2{width:560px;height:560px;left:-200px;bottom:-320px;background:#c8102e;opacity:.45}
-.o3{width:360px;height:360px;left:520px;top:260px;background:#6d8cff;opacity:.16}
+.o2{width:560px;height:560px;left:-200px;bottom:-320px;background:#16296e;opacity:.6}
+.o3{width:360px;height:360px;left:520px;top:260px;background:#2a44a8;opacity:.16}
 .wrap{position:absolute;inset:0;padding:72px 80px;display:flex;flex-direction:column}
 .brand{display:flex;align-items:center;gap:18px;font-family:SG;font-weight:700;font-size:30px}
 .brand svg{width:64px;height:64px}
 .muted{color:#8e9ab8;font-weight:500}
 h1{margin-top:auto;font-family:SG;font-weight:700;font-size:92px;line-height:.98;letter-spacing:-.045em}
-.g{background:linear-gradient(100deg,#ff4f6a,#d6294d 42%,#6d8cff);-webkit-background-clip:text;color:transparent}
+.g{background:linear-gradient(100deg,#bd1a3a,#d4213f 50%,#e8354f);-webkit-background-clip:text;color:transparent}
 .row{margin-top:34px;display:flex;gap:14px;font-family:JB;font-size:22px}
 .chip{padding:10px 18px;border-radius:999px;border:1px solid rgba(255,255,255,.14);background:rgba(255,255,255,.05);color:#cfd6ea}
 .code{position:absolute;right:80px;top:150px;font-family:JB;font-size:22px;line-height:1.7;color:#6b7699;white-space:pre}
-.code b{color:#ff7a90;font-weight:400}.code i{color:#c3e88d;font-style:normal}
+.code b{color:#f5657c;font-weight:400}.code i{color:#c3e88d;font-style:normal}
 </style></head><body><div class="grid"></div><div class="orb o1"></div><div class="orb o2"></div><div class="orb o3"></div>
 <div class="code">// Dulles High School
 <b>class</b> Club {
