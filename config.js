@@ -23,13 +23,11 @@ const CONFIG = {
     location: 'Sugar Land, TX', // Shown in the footer + search-engine data. Confirm!
   },
 
-  /* Club email — the old Weebly site's address was hidden from our crawler.
-   * Paste the club's usual email here, e.g. 'dullescsclub@gmail.com'. */
-  CLUB_EMAIL: 'PASTE_CLUB_EMAIL_HERE',
+  /* Club email (shown on Contact + in the footer). */
+  CLUB_EMAIL: 'dullescomputerscience@gmail.com',
 
-  /* Remind class code (e.g. '@dhscs26'). The old site listed '@dhscs24', which
-   * looks outdated. Leave '' to hide it. */
-  REMIND_CODE: '',
+  /* Remind class code. Leave '' to hide it. */
+  REMIND_CODE: '@dhscs27',
 
   /* Social links. Leave a value as '' to hide that icon everywhere.
    * (An Instagram account named @dhscompsci exists, but it wasn't linked from
@@ -44,14 +42,26 @@ const CONFIG = {
    * MEETINGS  (shown on Home, Contact, and used to time slide releases)
    * ------------------------------------------------------------------------ */
   MEETING: {
-    day: 'PASTE_MEETING_DAY',   // e.g. 'Thursdays'
-    time: 'PASTE_MEETING_TIME', // e.g. '4:15 – 5:15 PM'
-    room: 'PASTE_MEETING_ROOM', // e.g. 'Room B105'
+    day: 'Every other Monday', // Shown on Home + Contact
+    time: '4:00 PM',
+    room: 'PASTE_MEETING_ROOM', // e.g. 'Room B105' (hidden until filled in)
     /* 24-hour time meetings usually END. Slides unlock at this time on the
      * meeting date unless a slides entry sets its own "availableFrom". */
     endTime24: '17:00',
-    /* Timezone the club meets in (used for slide unlock times). */
+    /* Timezone the club meets in (used for slide unlock times + the schedule). */
     timezone: 'America/Chicago',
+
+    /* Regular schedule. Until the Google Calendar below is connected, the
+     * Calendar page, "Next meeting" countdown and Home strip are generated
+     * from this. Once CALENDAR is filled in, Google Calendar takes over
+     * (so holidays and cancellations show correctly). */
+    SCHEDULE: {
+      firstMeeting: '2026-09-21', // A known meeting date (YYYY-MM-DD); repeats from here on
+      everyWeeks: 2,              // 2 = every other week
+      startTime24: '16:00',       // 4:00 PM
+      durationMinutes: 60,        // Guess: change if meetings run longer/shorter
+      title: 'Club Meeting',
+    },
   },
 
   /* ---------------------------------------------------------------------------
@@ -85,7 +95,8 @@ const CONFIG = {
    *  ⚠ Published sheets are PUBLIC. Consider "First name + last initial".
    * ------------------------------------------------------------------------ */
   POINTS: {
-    POINTS_SHEET_URL: 'PASTE_PUBLISHED_GOOGLE_SHEET_CSV_URL_HERE',
+    // Your published sheet (the "pubhtml" embed link works too; it's converted to CSV automatically).
+    POINTS_SHEET_URL: 'https://docs.google.com/spreadsheets/d/e/2PACX-1vRkV0yhlusJjQHhYwAoF-E8JcD3BxF12Sv6hA5E_mNNBUnJUU8ZsIYDAPSxwMU3EMI5tyo0YqVEdj5e/pub?gid=1452997756&single=true&output=csv',
 
     /* Header names in YOUR sheet. If a header isn't found the site tries to
      * auto-detect it (e.g. "Student", "Attendance", "Solved", "Score"). */

@@ -3,7 +3,7 @@ import { initApp } from '../core/app.js';
 import { icon } from '../core/icons.js';
 import { openModal } from '../core/modal.js';
 import { addDays, esc, fmt, formatTime, sameDay, startOfDay } from '../core/utils.js';
-import { EVENT_TYPE_LEGEND, getEvents, getUpcoming, IS_DEMO, pickNextMeeting } from '../lib/calendar-data.js';
+import { EVENT_TYPE_LEGEND, getEvents, getUpcoming, pickNextMeeting, SOURCE, sourceNote } from '../lib/calendar-data.js';
 import { countdownMarkup, formatWhen, openEventModal, startCountdown } from '../lib/event-ui.js';
 
 initApp();
@@ -224,7 +224,10 @@ panel.addEventListener('click', (e) => {
 document.querySelector('[data-legend]').innerHTML = EVENT_TYPE_LEGEND.map(
   (t) => `<li data-type="${t.id}"><i aria-hidden="true"></i>${esc(t.label)}</li>`,
 ).join('');
-document.querySelector('[data-demo-banner]').hidden = !IS_DEMO;
+const banner = document.querySelector('[data-demo-banner]');
+banner.hidden = SOURCE === 'google';
+banner.classList.toggle('demo-banner--info', SOURCE === 'schedule');
+banner.querySelector('[data-banner-text]').innerHTML = sourceNote();
 
 setView(state.view);
 load();

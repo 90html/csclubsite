@@ -66,7 +66,7 @@ let markId = 0;
 /** The club logo mark: a gradient </> in a rounded tile. */
 export function logoMark(cls = 'brand__mark') {
   const id = `lg${++markId}`;
-  return `<svg class="${cls}" viewBox="0 0 40 40" aria-hidden="true" focusable="false"><defs><linearGradient id="${id}" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#5b8cff"/><stop offset=".55" stop-color="#8b5cf6"/><stop offset="1" stop-color="#22d3ee"/></linearGradient></defs><rect x="1" y="1" width="38" height="38" rx="11" fill="#11131c" stroke="url(#${id})" stroke-width="1.5"/><path d="M14.5 13.5 8.5 20l6 6.5M25.5 13.5l6 6.5-6 6.5M22.5 11.5l-5 17" fill="none" stroke="url(#${id})" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/></svg>`;
+  return `<svg class="${cls}" viewBox="0 0 40 40" aria-hidden="true" focusable="false"><defs><linearGradient id="${id}" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#ff4f6a"/><stop offset=".45" stop-color="#d6294d"/><stop offset="1" stop-color="#6d8cff"/></linearGradient></defs><rect x="1" y="1" width="38" height="38" rx="11" fill="#0c1530" stroke="url(#${id})" stroke-width="1.5"/><path d="M14.5 13.5 8.5 20l6 6.5M25.5 13.5l6 6.5-6 6.5M22.5 11.5l-5 17" fill="none" stroke="url(#${id})" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/></svg>`;
 }
 
 const esc = (s) => String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
@@ -101,7 +101,7 @@ export function headPartial(page, config) {
 <title>${esc(page.title)}</title>
 <meta name="description" content="${esc(page.description)}">
 <link rel="canonical" href="${esc(url)}">
-<meta name="theme-color" content="#0a0b10">
+<meta name="theme-color" content="#060a17">
 <meta name="color-scheme" content="dark">
 <meta property="og:type" content="website">
 <meta property="og:site_name" content="${esc(config.CLUB_NAME)}">

@@ -25,7 +25,7 @@ export function toCsvUrl(input) {
   const pub = /\/spreadsheets\/d\/e\/([\w-]+)\/pub(?:html)?/.exec(url);
   if (pub) {
     const gid = /[?&#]gid=(\d+)/.exec(url);
-    return `https://docs.google.com/spreadsheets/d/e/${pub[1]}/pub?output=csv${gid ? `&gid=${gid[1]}` : ''}`;
+    return `https://docs.google.com/spreadsheets/d/e/${pub[1]}/pub?output=csv${gid ? `&gid=${gid[1]}&single=true` : ''}`;
   }
   // Normal: /spreadsheets/d/<id>/edit#gid=0  →  gviz CSV endpoint
   const normal = /\/spreadsheets\/d\/([\w-]+)/.exec(url);
@@ -93,8 +93,25 @@ export function buildPeople(csvText) {
   if (!rows.length) return { people: [], columns: null };
   const headerIdx = findHeaderRow(rows);
   const header = rows[headerIdx];
+  const body = rows.slice(headerIdx + 1);
   const map = mapColumns(header);
+  const isNumeric = (v) => v !== '' && /^-?[\d,.\s]+$/.test(v);
+  const mostly = (i, test) => {
+    const vals = body.map((r) => (r[i] || '').trim()).filter(Boolean);
+    return vals.length > 0 && vals.filter(test).length / vals.length >= 0.8;
+  };
+  // Fallbacks for unrecognized headers: name = first mostly-text column,
+  // total = last mostly-numeric column (only if no category/total was found).
+  if (map.name < 0) map.name = header.findIndex((_, i) => mostly(i, (v) => !isNumeric(v)));
   if (map.name < 0) throw new Error('Couldn’t find a Name column in the sheet. Check POINTS.COLUMNS.name in config.js.');
+  if (map.total < 0 && CATEGORIES.every((c) => !map[c].length)) {
+    for (let i = header.length - 1; i >= 0; i--) {
+      if (i !== map.name && mostly(i, isNumeric)) {
+        map.total = i;
+        break;
+      }
+    }
+  }
 
   const pv = P.POINT_VALUES || {};
   const multiplier = {
@@ -105,7 +122,7 @@ export function buildPeople(csvText) {
 
   const people = [];
   const seen = new Set();
-  for (const row of rows.slice(headerIdx + 1)) {
+  for (const row of body) {
     const name = (row[map.name] || '').replace(/\s+/g, ' ').trim();
     if (!name || JUNK_NAMES.test(name)) continue;
     const person = { name };

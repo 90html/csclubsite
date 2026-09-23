@@ -14,6 +14,11 @@ const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), '..');
 const PORT = 8123;
 const BASE = `http://localhost:${PORT}`;
 const PAGES = ['/', '/getting-started/', '/slides/', '/calendar/', '/points/', '/officers/', '/contact/', '/404.html'];
+// Stand-in for the published Google Sheet (docs.google.com isn't reachable from CI/sandboxes).
+const MOCK_SHEET = 'Name,Meetings,Problems,Contests,Total\n"Kavish M.",5,12,10,27\n"Arnav D.",4,9,5,18\n"Ahaan T.",5,7,5,17\nTest Student,1,0,0,1\n';
+const sheetRoute = (r) => r.fulfill({ contentType: 'text/csv', body: MOCK_SHEET, headers: { 'access-control-allow-origin': '*' } });
+const DEMO_POINTS = "CONFIG.POINTS.POINTS_SHEET_URL = 'PASTE_PUBLISHED_GOOGLE_SHEET_CSV_URL_HERE';";
+const DEMO_CALENDAR = 'CONFIG.MEETING.SCHEDULE = null;';
 
 let failures = 0;
 const ok = (cond, msg) => {
@@ -37,6 +42,9 @@ ok(first('zoe') === 'Zoë Anderson', 'Search: diacritics');
 ok(first('  AVA   martinez ') === 'Ava Martinez', 'Search: whitespace + case');
 ok(first('oconnor') === 'Ryan O’Connor', 'Search: punctuation-insensitive');
 ok(!first('qqqq'), 'Search: no false positives');
+const { buildPeople } = await import(pathToFileURL(join(ROOT, 'js/lib/points-data.js')).href);
+const odd = buildPeople('Who,Grade Level,Pts\nAva M.,10,12\nLiam C.,11,30\n');
+ok(odd.people[0].name === 'Liam C.' && odd.people[0].total === 30, 'Sheet: unknown headers fall back to first text column + last number column');
 
 /* ---------------- Browser checks ---------------- */
 const server = spawn(process.execPath, [join(ROOT, 'tools/serve.mjs')], { env: { ...process.env, PORT: String(PORT) }, stdio: 'ignore' });
@@ -54,6 +62,7 @@ async function open(path, { width = 1280, height = 900, config, time, routes = {
     const base = await readFile(join(ROOT, 'config.js'), 'utf8');
     await page.route('**/config.js', (r) => r.fulfill({ contentType: 'text/javascript', body: `${base}\n${config}` }));
   }
+  await page.route('https://docs.google.com/**', sheetRoute); // tests can override (later routes win)
   for (const [pattern, handler] of Object.entries(routes)) await page.route(pattern, handler);
   await page.goto(BASE + path, { waitUntil: 'networkidle' });
   return { page, ctx, errors };
@@ -69,9 +78,22 @@ for (const width of [360, 768, 1440, 2560]) {
   }
 }
 
+console.log('\nPoints (configured sheet, mocked)');
+{
+  const { page, ctx, errors } = await open('/points/');
+  ok(await page.locator('[data-demo-banner]').isHidden(), 'No demo banner with the real sheet URL');
+  ok((await page.locator('.board tbody tr').count()) === 4, 'Rows loaded from the sheet');
+  await page.fill('#points-q', 'kavish');
+  await page.locator('#points-q').press('Enter');
+  await page.waitForTimeout(1300);
+  ok((await page.locator('.result__total-num').innerText()) === '27', 'Lookup from sheet data');
+  ok(!errors.length, 'No console errors');
+  await ctx.close();
+}
+
 console.log('\nPoints (demo data)');
 {
-  const { page, ctx } = await open('/points/');
+  const { page, ctx } = await open('/points/', { config: DEMO_POINTS });
   const input = page.locator('#points-q');
   for (const [q, expect] of [['kowal', 'Ella Kowalski'], ['kowalski ella', 'Ella Kowalski'], ['elaa kowalsky', 'Ella Kowalski'], ['garcia', 'Isabella García']]) {
     await input.fill(q);
@@ -98,7 +120,7 @@ console.log('\nPoints (demo data)');
   await ctx.close();
 }
 {
-  const { page, ctx } = await open('/points/#q=isabela');
+  const { page, ctx } = await open('/points/#q=isabela', { config: DEMO_POINTS });
   await page.waitForTimeout(300);
   ok((await page.locator('.result__name').innerText()) === 'Isabella García', 'Home teaser hash prefill (with typo)');
   ok(!page.url().includes('#'), 'Name is removed from the URL');
@@ -130,28 +152,28 @@ CONFIG.POINTS.COLUMN_GROUPS = { meetings: ['9/*'], problems: [], contests: ['Con
   await ctx.close();
 }
 
-console.log('\nSlides lock/unlock (sample entry dated 2026-09-24, unlocks 17:00 America/Chicago)');
+console.log('\nSlides lock/unlock (sample entry dated 2026-10-05, unlocks 17:00 America/Chicago)');
 for (const [time, expected] of [
-  ['2026-09-24T21:59:00Z', 'upcoming'],
-  ['2026-09-24T22:01:00Z', 'pending'],
+  ['2026-10-05T21:59:00Z', 'upcoming'],
+  ['2026-10-05T22:01:00Z', 'pending'],
 ]) {
   const { page, ctx } = await open('/slides/', { time });
-  const cls = await page.locator('.slide-card', { hasText: 'String Manipulation' }).getAttribute('class');
+  const cls = await page.locator('.slide-card', { hasText: 'Loops & Arrays' }).getAttribute('class');
   ok(cls.includes(`slide-card--${expected}`), `${time} → ${expected}`);
   await ctx.close();
 }
 {
   const { page, ctx } = await open('/slides/', {
-    time: '2026-09-25T12:00:00Z',
+    time: '2026-10-06T12:00:00Z',
     routes: {
       '**/data/slides.json': async (r) => {
         const json = JSON.parse(await readFile(join(ROOT, 'data/slides.json'), 'utf8'));
-        json.slides.find((s) => s.id === '2026-09-24-strings').slidesUrl = 'https://example.com/slides';
+        json.slides.find((s) => s.id === '2026-10-05-loops-arrays').slidesUrl = 'https://example.com/slides';
         await r.fulfill({ contentType: 'application/json', body: JSON.stringify(json) });
       },
     },
   });
-  const card = page.locator('.slide-card', { hasText: 'String Manipulation' });
+  const card = page.locator('.slide-card', { hasText: 'Loops & Arrays' });
   ok((await card.getAttribute('class')).includes('slide-card--open'), 'Link added after the meeting → open');
   ok(await card.locator('.badge--accent').count() === 1, '"Latest" badge on newest open card');
   await page.locator('.chip', { hasText: 'UIL' }).click();
@@ -163,9 +185,29 @@ for (const [time, expected] of [
   await ctx.close();
 }
 
-console.log('\nCalendar');
+console.log('\nCalendar (regular schedule from config.js)');
 {
   const { page, ctx } = await open('/calendar/', { time: '2026-09-23T15:00:00Z' });
+  ok(await page.locator('.demo-banner--info').isVisible(), 'Schedule notice shown');
+  ok((await page.locator('.next-card h2').innerText()) === 'Club Meeting', 'Next meeting title');
+  ok((await page.locator('.next-card').innerText()).includes('Mon, Oct 5'), 'Next meeting is Mon Oct 5 (every other Monday from 9/21)');
+  const sepDays = await page.locator('.day:not(.day--out) .pill').count();
+  ok(sepDays === 1, 'September shows only the 9/21 meeting (nothing invented before it)');
+  await page.locator('[data-cal-next]').click();
+  const oct = await page.locator('.day:not(.day--out)').filter({ has: page.locator('.pill') }).allInnerTexts();
+  ok(oct.length === 2 && oct[0].startsWith('5') && oct[1].startsWith('19'), 'October: 5th and 19th');
+  await ctx.close();
+}
+{
+  const { page, ctx } = await open('/', { time: '2026-09-23T15:00:00Z' });
+  ok((await page.locator('[data-upcoming]').innerText()).includes('Mon, Oct 5'), 'Home countdown targets Mon Oct 5');
+  ok(await page.locator('[data-upcoming] .badge--demo').count() === 0, 'No DEMO badge in schedule mode');
+  await ctx.close();
+}
+
+console.log('\nCalendar (demo data)');
+{
+  const { page, ctx } = await open('/calendar/', { time: '2026-09-23T15:00:00Z', config: DEMO_CALENDAR });
   ok((await page.locator('[data-cal-title]').innerText()) === 'September 2026', 'Month title');
   ok(await page.locator('.day--today').count() === 1, 'Today highlighted');
   ok(await page.locator('.next-card .countdown').count() === 1, 'Next meeting countdown');
@@ -189,7 +231,7 @@ console.log('\nCalendar');
   await ctx.close();
 }
 {
-  const { page, ctx } = await open('/calendar/', { width: 390 });
+  const { page, ctx } = await open('/calendar/', { width: 390, config: DEMO_CALENDAR });
   ok((await page.locator('#tab-agenda').getAttribute('aria-selected')) === 'true', 'Mobile defaults to agenda');
   await ctx.close();
 }
@@ -199,7 +241,7 @@ console.log('\nCalendar');
     routes: { 'https://www.googleapis.com/**': (r) => r.fulfill({ status: 403, body: '{}', headers: { 'access-control-allow-origin': '*' } }) },
   });
   ok(await page.locator('.cal-shell .state--error [data-retry]').count() === 1, 'API error state with retry');
-  ok(await page.locator('[data-demo-banner]').isHidden(), 'No demo banner once configured');
+  ok(await page.locator('[data-demo-banner]').isHidden(), 'No notice once Google Calendar is configured');
   await ctx.close();
 }
 {
@@ -238,20 +280,22 @@ console.log('\nNav, contact, officers');
   await ctx.close();
 }
 {
-  const { page, ctx } = await open('/contact/', { config: "CONFIG.CLUB_EMAIL = 'club@example.com'; CONFIG.REMIND_CODE = '@dhscs26';" });
-  ok((await page.locator('.copy-email__addr').innerText()) === 'club@example.com', 'Email shown when configured');
-  ok((await page.locator('a[data-club-email]').first().getAttribute('href')) === 'mailto:club@example.com', 'mailto link');
-  ok(await page.locator('[data-remind]').isVisible(), 'Remind shown when configured');
+  const { page, ctx } = await open('/contact/');
+  ok((await page.locator('.copy-email__addr').innerText()) === 'dullescomputerscience@gmail.com', 'Club email shown');
+  ok((await page.locator('a[data-club-email]').first().getAttribute('href')) === 'mailto:dullescomputerscience@gmail.com', 'mailto link');
+  ok((await page.locator('[data-remind]').innerText()).includes('@dhscs27'), 'Remind @dhscs27 shown');
+  ok((await page.locator('[data-meeting-group]').innerText()).includes('Every other Monday'), 'Meeting schedule shown');
   await ctx.close();
 }
 {
-  const { page, ctx } = await open('/contact/');
+  const { page, ctx } = await open('/contact/', { config: "CONFIG.CLUB_EMAIL = 'PASTE_CLUB_EMAIL_HERE';" });
   ok(await page.locator('[data-email-missing]').isVisible(), 'Fallback when email is a placeholder');
   await ctx.close();
 }
 {
   const { page, ctx } = await open('/officers/');
   ok((await page.locator('.officer').count()) === 9 && (await page.locator('.sponsor').count()) === 2, '9 officers + 2 sponsors');
+  ok((await page.locator('.sponsor__name').allInnerTexts()).includes('Coach Garrett'), 'Coach Garrett spelled correctly');
   ok((await page.locator('.officer--featured .officer__name').innerText()) === 'Kavish Mehta', 'President featured');
   await ctx.close();
 }
@@ -261,6 +305,7 @@ for (const slug of ['1-home', '5-points', '4-calendar']) {
   const snippet = await readFile(join(ROOT, `weebly-export/${slug}.html`), 'utf8');
   const ctx = await browser.newContext({ viewport: { width: 1280, height: 900 } });
   const page = await ctx.newPage();
+  await page.route('https://docs.google.com/**', sheetRoute);
   const errors = [];
   page.on('pageerror', (e) => errors.push(e.message));
   page.on('console', (m) => m.type() === 'error' && !/Failed to load resource/.test(m.text()) && errors.push(m.text()));

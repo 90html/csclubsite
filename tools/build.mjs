@@ -20,6 +20,7 @@ const CONFIG = (await import(`${pathToFileURL(join(ROOT, 'config.js')).href}?t=$
 const { ICON_PATHS, icon } = await import(pathToFileURL(join(ROOT, 'js/core/icons.js')).href);
 const { renderOfficers, renderSponsors, renderSponsorList } = await import(pathToFileURL(join(ROOT, 'js/lib/officers-render.js')).href);
 const { hashString, isPlaceholder } = await import(pathToFileURL(join(ROOT, 'js/core/utils.js')).href);
+const { SOURCE: CAL_SOURCE, sourceNote } = await import(pathToFileURL(join(ROOT, 'js/lib/calendar-data.js')).href);
 
 const SITE = String(CONFIG.SITE_URL).replace(/\/+$/, '');
 const read = (p) => readFile(join(ROOT, p), 'utf8');
@@ -60,8 +61,13 @@ for (const page of PAGES) {
   }
   if (page.key === 'contact') html = replaceRegion(html, 'sponsor-list', renderSponsorList(officers));
   // Bake the demo banner's visibility in (it only depends on config.js) to avoid layout shift.
-  const demo = { calendar: isPlaceholder(CONFIG.CALENDAR.CALENDAR_ID) || isPlaceholder(CONFIG.CALENDAR.CALENDAR_API_KEY), points: isPlaceholder(CONFIG.POINTS.POINTS_SHEET_URL) }[page.key];
+  const demo = { calendar: CAL_SOURCE !== 'google', points: isPlaceholder(CONFIG.POINTS.POINTS_SHEET_URL) }[page.key];
   if (demo !== undefined) html = html.replace(/(data-demo-banner)( hidden)?/, demo ? '$1' : '$1 hidden');
+  if (page.key === 'calendar') {
+    html = html
+      .replace(/demo-banner( demo-banner--info)? demo-banner--spaced/, `demo-banner${CAL_SOURCE === 'schedule' ? ' demo-banner--info' : ''} demo-banner--spaced`)
+      .replace(/<p data-banner-text>[\s\S]*?<\/p>/, () => `<p data-banner-text>${sourceNote()}</p>`);
+  }
   html = fillIcons(html);
   await write(page.file, html);
   built[page.key] = html;
@@ -100,8 +106,8 @@ await write(
       short_name: CONFIG.CLUB_SHORT_NAME,
       start_url: './',
       display: 'standalone',
-      background_color: '#0a0b10',
-      theme_color: '#0a0b10',
+      background_color: '#060a17',
+      theme_color: '#060a17',
       icons: [
         { src: 'assets/icons/icon-192.png', sizes: '192x192', type: 'image/png' },
         { src: 'assets/icons/icon-512.png', sizes: '512x512', type: 'image/png' },
@@ -157,8 +163,8 @@ else if(d.type==='dhscs:ready'){vp();if(f.getBoundingClientRect().top<0)f.scroll
 window.addEventListener('scroll',vp,{passive:true});window.addEventListener('resize',vp);SETUP})();`;
 
 function parentSnippet({ id, title, setup, iframeAttrs }) {
-  return `<div style="width:100%;margin:0;padding:0;background:#0a0b10;border-radius:0;">
-<iframe id="${id}" name="${id}" title="${title}" ${iframeAttrs} scrolling="no" allow="clipboard-write" style="display:block;width:100%;height:1200px;border:0;overflow:hidden;background:#0a0b10;" loading="eager"></iframe>
+  return `<div style="width:100%;margin:0;padding:0;background:#060a17;border-radius:0;">
+<iframe id="${id}" name="${id}" title="${title}" ${iframeAttrs} scrolling="no" allow="clipboard-write" style="display:block;width:100%;height:1200px;border:0;overflow:hidden;background:#060a17;" loading="eager"></iframe>
 </div>
 <script>
 ${PARENT_SCRIPT.replace('FRAME_ID', () => JSON.stringify(id)).replace('SETUP', () => setup)}

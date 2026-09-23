@@ -9,7 +9,7 @@ The build environment's network policy **blocked direct access** to `dhscompsci.
 What that means:
 
 - **No images were recovered.** `/assets/images/` holds only the new site's generated artwork. The photo gallery is data-driven and stays hidden until photos are added (see README, "Add photos").
-- **The club email could not be recovered.** Search engines show it as `[email protected]` (Cloudflare obfuscation), so `CLUB_EMAIL` in `config.js` is a placeholder.
+- **The club email could not be recovered** (search engines show it as `[email protected]`). The club provided it afterwards: `dullescomputerscience@gmail.com`.
 - If you can open the old site, check this audit against it before you retire it.
 
 ## Page inventory
@@ -22,14 +22,14 @@ What that means:
 | Misc Links | `/misc-links.html` | A list of extra links; the individual links were not visible in the search index. | **Removed.** The useful, still-valid links are in the Getting Started resource grid. |
 | Announcements | `/announcements` | Blog posts, e.g. a guest talk by Mr. Ventura of Ventura Information Systems. | **Removed** as stale. The Calendar and Slides pages replace it. |
 | Officers | `/officers.html` | Previous officers (presidents Mahith Gottpatti and Aanya Singh). | **Replaced** with the 2026 roster you supplied (`data/officers.json`). |
-| Contact Us | `/contact-us.html` | Club email (obfuscated in search results), Remind code `@dhscs24`, "contact an officer". | **Kept and simplified** into the Contact page. The email is a placeholder. |
+| Contact Us | `/contact-us.html` | Club email (obfuscated in search results), Remind code `@dhscs24`, "contact an officer". | **Kept and simplified** into the Contact page, with the current email and Remind code. |
 
 ## Outdated content removed
 
 - **Old officers** (Mahith Gottpatti, Aanya Singh and the rest of that roster), replaced by the current roster.
 - **Eclipse Neon** (a 2016 release), replaced by a link to the current Eclipse IDE download.
 - **"NetBeans-JDK bundle"**: Oracle no longer ships this bundle. It is replaced by separate, current links for the JDK and for Apache NetBeans.
-- **Remind code `@dhscs24`**: this looks like a 2024 class code. It is **not shown** unless you set `REMIND_CODE` in `config.js`.
+- **Remind code `@dhscs24`**: replaced with the current code, **`@dhscs27`**.
 - **Announcements blog** and the dated guest-speaker post: stale.
 - **Misc Links**: an unsorted link dump, now curated.
 - **The Weebly-style hyperlink list for slides**: replaced by the data-driven Slides card grid.
@@ -40,8 +40,7 @@ What that means:
 - The club's identity and mission (rewritten to be punchier and beginner-friendly).
 - The focus on **Java**, **competitive programming**, and **local and UIL contests**.
 - **Practice contests** before contest season.
-- The two faculty sponsors: **Mr. Rogers** (Room B105) and **Coach Garret** (Room A-105), with rooms as you gave them.
-  - Note: the old site spelled it "Coach **Garrett**". The new site uses your spelling ("Garret"). Fix `data/officers.json` if needed.
+- The two faculty sponsors: **Mr. Rogers** (Room B105) and **Coach Garrett** (Room A-105).
 - Learning resources that are still valid (each URL was checked in September 2026, either by a direct request or against current search results):
   - Oracle JDK downloads, `https://www.oracle.com/java/technologies/downloads/`
   - Apache NetBeans, `https://netbeans.apache.org/front/main/download/`
@@ -56,7 +55,7 @@ What that means:
 
 ## Facts deliberately not invented
 
-The new site does **not** claim member counts, awards, contest results, founding year, or a meeting schedule. Meeting day, time and room are placeholders in `config.js`, and the site hides them until they're filled in. The school location ("Sugar Land, TX") is inferred from the UIL (Texas) contest focus. It appears only in structured data and the footer, so confirm or change `SCHOOL.location` in `config.js`.
+The new site does **not** claim member counts, awards, contest results or a founding year. The meeting schedule (every other Monday at 4:00 PM, starting 2026-09-21) was provided by the club. The meeting room is still a placeholder and stays hidden until it's filled in. The school location ("Sugar Land, TX") is inferred from the UIL (Texas) contest focus. It appears only in structured data and the footer, so confirm or change `SCHOOL.location` in `config.js`.
 
 ## Images
 

@@ -3,10 +3,28 @@
  * config.js is still a placeholder. */
 import CONFIG from '../../config.js';
 import { cache } from '../core/site.js';
-import { addDays, isPlaceholder, parseLocalDate, startOfDay } from '../core/utils.js';
+import { addDays, isPlaceholder, parseLocalDate, startOfDay, zonedTime } from '../core/utils.js';
 
 const CAL = CONFIG.CALENDAR;
-export const IS_DEMO = isPlaceholder(CAL.CALENDAR_ID) || isPlaceholder(CAL.CALENDAR_API_KEY);
+const SCHEDULE = CONFIG.MEETING?.SCHEDULE;
+const HAS_GOOGLE = !isPlaceholder(CAL.CALENDAR_ID) && !isPlaceholder(CAL.CALENDAR_API_KEY);
+const HAS_SCHEDULE = Boolean(SCHEDULE && /^\d{4}-\d{2}-\d{2}$/.test(SCHEDULE.firstMeeting || '') && SCHEDULE.everyWeeks > 0);
+
+/** Where events come from: 'google' (Calendar API), 'schedule' (config.js), or 'demo'. */
+export const SOURCE = HAS_GOOGLE ? 'google' : HAS_SCHEDULE ? 'schedule' : 'demo';
+export const IS_DEMO = SOURCE === 'demo';
+
+/** Notice shown above the calendar when it isn't reading Google Calendar yet (HTML). */
+export function sourceNote() {
+  if (SOURCE === 'schedule') {
+    const when = [CONFIG.MEETING.day, CONFIG.MEETING.time].filter((v) => !isPlaceholder(v)).join(' at ');
+    return `<strong>Our regular meeting schedule${when ? `: ${when}` : ''}.</strong> Contests, workshops and date changes will appear here once the full club calendar is connected.`;
+  }
+  if (SOURCE === 'demo') {
+    return '<strong>Demo data.</strong> These sample events are shown because the Google Calendar ID and API key in <code>config.js</code> haven\'t been added yet.';
+  }
+  return '';
+}
 
 const OTHER = { id: 'other', label: 'Event' };
 
@@ -93,7 +111,35 @@ async function fetchRange(timeMin, timeMax) {
   return items;
 }
 
-/* ---------------- Demo data (only while config is a placeholder) ---------------- */
+/* ---------------- Regular schedule (until Google Calendar is connected) ---------------- */
+function scheduleItems(timeMin, timeMax) {
+  const tz = CONFIG.MEETING.timezone || 'America/Chicago';
+  const [y, m, d] = SCHEDULE.firstMeeting.split('-').map(Number);
+  const stepDays = 7 * SCHEDULE.everyWeeks;
+  const dayMs = 864e5;
+  const firstUtc = Date.UTC(y, m - 1, d);
+  // Start at the first occurrence that could overlap the range (never before firstMeeting).
+  const k0 = Math.max(0, Math.floor((timeMin.getTime() - firstUtc) / (stepDays * dayMs)) - 1);
+  const room = isPlaceholder(CONFIG.MEETING.room) ? '' : CONFIG.MEETING.room;
+  const items = [];
+  for (let k = k0; ; k++) {
+    const date = new Date(firstUtc + k * stepDays * dayMs).toISOString().slice(0, 10);
+    const start = zonedTime(date, SCHEDULE.startTime24 || '16:00', tz);
+    if (start >= timeMax) break;
+    const end = new Date(start.getTime() + (SCHEDULE.durationMinutes || 60) * 60_000);
+    items.push({
+      id: `meeting-${date}`,
+      summary: SCHEDULE.title || 'Club Meeting',
+      description: 'Regular club meeting. Everyone is welcome, and no experience is needed!',
+      location: room,
+      start: { dateTime: start.toISOString() },
+      end: { dateTime: end.toISOString() },
+    });
+  }
+  return items;
+}
+
+/* ---------------- Demo data (only if neither Google nor a schedule is set) ---------------- */
 const DEMO_TOPICS = [
   'Java Basics', 'Loops & Arrays', 'Strings', 'Recursion', 'Sorting', 'ArrayLists',
   'Maps & Sets', 'Greedy Algorithms', 'Binary Search', 'Graphs: BFS & DFS', 'Dynamic Programming',
@@ -141,20 +187,21 @@ function demoItems(timeMin, timeMax) {
  * @returns {Promise<{ events: object[], demo: boolean }>}
  */
 export async function getEvents(timeMin, timeMax) {
-  const raw = IS_DEMO ? demoItems(timeMin, timeMax) : await fetchRange(timeMin, timeMax);
+  const raw =
+    SOURCE === 'google' ? await fetchRange(timeMin, timeMax) : SOURCE === 'schedule' ? scheduleItems(timeMin, timeMax) : demoItems(timeMin, timeMax);
   const events = raw
     .map(normalize)
     .filter((e) => e.end > timeMin && e.start < timeMax)
     .sort((a, b) => a.start - b.start || a.end - b.end);
-  return { events, demo: IS_DEMO };
+  return { events, demo: IS_DEMO, source: SOURCE };
 }
 
 /** Upcoming (or in-progress) events for the next ~4 months. */
 export async function getUpcoming() {
   const now = new Date();
   const from = new Date(now.getFullYear(), now.getMonth(), now.getDate());
-  const { events, demo } = await getEvents(from, addDays(from, 120));
-  return { events: events.filter((e) => e.end > now), demo };
+  const { events, demo, source } = await getEvents(from, addDays(from, 120));
+  return { events: events.filter((e) => e.end > now), demo, source };
 }
 
 /** The next meeting-type event (or the next event if none is a meeting). */
