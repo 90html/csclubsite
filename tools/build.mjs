@@ -19,6 +19,7 @@ const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), '..');
 const CONFIG = (await import(`${pathToFileURL(join(ROOT, 'config.js')).href}?t=${Date.now()}`)).default;
 const { ICON_PATHS, icon } = await import(pathToFileURL(join(ROOT, 'js/core/icons.js')).href);
 const { renderOfficers, renderSponsors, renderSponsorList } = await import(pathToFileURL(join(ROOT, 'js/lib/officers-render.js')).href);
+const { photoImg, renderGallery } = await import(pathToFileURL(join(ROOT, 'js/lib/photo-render.js')).href);
 const { hashString, isPlaceholder } = await import(pathToFileURL(join(ROOT, 'js/core/utils.js')).href);
 const { SOURCE: CAL_SOURCE, sourceNote } = await import(pathToFileURL(join(ROOT, 'js/lib/calendar-data.js')).href);
 
@@ -52,8 +53,21 @@ function fillIcons(html) {
   });
 }
 
+/** Fill every <figure data-photo="id" [data-sizes] [data-eager]> with its photo. */
+function fillPhotos(html, root) {
+  return html.replace(/<figure([^>]*)\sdata-photo="([\w-]+)"([^>]*)>[\s\S]*?<\/figure>/g, (m, before, id, after) => {
+    const photo = photos.find((p) => p.id === id);
+    if (!photo) throw new Error(`Unknown photo "${id}" (see data/gallery.json)`);
+    const attrs = `${before} ${after}`;
+    const sizes = /data-sizes="([^"]*)"/.exec(attrs)?.[1] || '100vw';
+    const eager = /\sdata-eager\b/.test(` ${attrs}`);
+    return `<figure${before} data-photo="${id}"${after}>${photoImg(photo, { root, sizes, eager })}</figure>`;
+  });
+}
+
 /* ---------------------------------------------------------------- 1–3 pages */
 const officers = JSON.parse(await read('data/officers.json'));
+const photos = JSON.parse(await read('data/gallery.json')).photos || [];
 const built = {};
 for (const page of PAGES) {
   let html = await read(page.file);
@@ -80,7 +94,11 @@ for (const page of PAGES) {
       .replace(/demo-banner( demo-banner--info)? demo-banner--spaced/, `demo-banner${CAL_SOURCE === 'schedule' ? ' demo-banner--info' : ''} demo-banner--spaced`)
       .replace(/<p data-banner-text>[\s\S]*?<\/p>/, () => `<p data-banner-text>${sourceNote()}</p>`);
   }
-  html = fillIcons(html);
+  if (page.key === 'home') {
+    html = replaceRegion(html, 'gallery', renderGallery(photos, rootFor(page)));
+    html = setHidden(html, 'data-gallery-section', !photos.some((p) => p.inGallery));
+  }
+  html = fillPhotos(fillIcons(html), rootFor(page));
   await write(page.file, html);
   built[page.key] = html;
 }
@@ -152,6 +170,13 @@ const weeblyUrl = (key) => CONFIG.WEEBLY_PAGE_URLS?.[key] || `${SITE}/${PAGES.fi
 /** Rewrite relative links: internal pages → Weebly URLs (target=_top); assets → absolute SITE_URL. */
 function absolutize(html, page) {
   const pageUrl = new URL(`https://x.invalid/${page.path}`);
+  html = html.replace(/\ssrcset="([^"]*)"/g, (m, list) => {
+    const abs = list.split(',').map((part) => {
+      const [url, w] = part.trim().split(/\s+/);
+      return `${SITE}${new URL(url, pageUrl).pathname}${w ? ` ${w}` : ''}`;
+    });
+    return ` srcset="${abs.join(', ')}"`;
+  });
   return html.replace(/\s(href|src)="([^"]*)"/g, (m, attr, value) => {
     if (!value || /^(#|[a-z][a-z0-9+.-]*:|\/\/)/i.test(value)) return m;
     const resolved = new URL(value, pageUrl);

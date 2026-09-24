@@ -1,4 +1,245 @@
 {
-  "_README": "Photos for the Home page 'Moments' gallery. Easiest: drop photos in assets/images/originals/ and run `npm run images` — this file is updated for you (then edit the alt text!). The gallery stays hidden while this list is empty.",
-  "photos": []
+  "_README": "Club photos. Drop originals in assets/images/originals/ and run `npm run images` (makes WebP sizes + updates this file, keeping alt/caption/inGallery/focus), then `npm run build`. Pages show a photo via <figure data-photo=\"id\">. \"inGallery\": true photos appear in the Home \"Moments\" gallery, in this order. \"focus\" is where to keep in view when cropped (CSS object-position).",
+  "photos": [
+    {
+      "id": "i-love-cs",
+      "src": "assets/images/photos/i-love-cs-960.webp",
+      "srcset": [
+        {
+          "src": "assets/images/photos/i-love-cs-480.webp",
+          "w": 480
+        },
+        {
+          "src": "assets/images/photos/i-love-cs-960.webp",
+          "w": 960
+        },
+        {
+          "src": "assets/images/photos/i-love-cs-1067.webp",
+          "w": 1067
+        }
+      ],
+      "width": 1067,
+      "height": 800,
+      "alt": "Members smiling and giving thumbs up behind an \"I love CS\" whiteboard sign.",
+      "caption": "We ♥ CS",
+      "inGallery": true,
+      "focus": "50% 45%"
+    },
+    {
+      "id": "contest-trophies-team",
+      "src": "assets/images/photos/contest-trophies-team-960.webp",
+      "srcset": [
+        {
+          "src": "assets/images/photos/contest-trophies-team-480.webp",
+          "w": 480
+        },
+        {
+          "src": "assets/images/photos/contest-trophies-team-960.webp",
+          "w": 960
+        },
+        {
+          "src": "assets/images/photos/contest-trophies-team-1100.webp",
+          "w": 1100
+        }
+      ],
+      "width": 1100,
+      "height": 728,
+      "alt": "Club members holding trophies and medals after a programming contest.",
+      "caption": "Contest day",
+      "inGallery": true,
+      "focus": "50% 60%"
+    },
+    {
+      "id": "meeting-recursion-crowd",
+      "src": "assets/images/photos/meeting-recursion-crowd-960.webp",
+      "srcset": [
+        {
+          "src": "assets/images/photos/meeting-recursion-crowd-480.webp",
+          "w": 480
+        },
+        {
+          "src": "assets/images/photos/meeting-recursion-crowd-960.webp",
+          "w": 960
+        },
+        {
+          "src": "assets/images/photos/meeting-recursion-crowd-1067.webp",
+          "w": 1067
+        }
+      ],
+      "width": 1067,
+      "height": 800,
+      "alt": "Members crowd around the screen to trace a recursion problem together.",
+      "caption": "Tracing recursion",
+      "inGallery": true,
+      "focus": "50% 55%"
+    },
+    {
+      "id": "lab-practice",
+      "src": "assets/images/photos/lab-practice-960.webp",
+      "srcset": [
+        {
+          "src": "assets/images/photos/lab-practice-480.webp",
+          "w": 480
+        },
+        {
+          "src": "assets/images/photos/lab-practice-960.webp",
+          "w": 960
+        },
+        {
+          "src": "assets/images/photos/lab-practice-1067.webp",
+          "w": 1067
+        }
+      ],
+      "width": 1067,
+      "height": 800,
+      "alt": "Members working through problems on laptops in the computer lab.",
+      "caption": "Practice time",
+      "inGallery": true,
+      "focus": "40% 60%"
+    },
+    {
+      "id": "more-data-structures",
+      "src": "assets/images/photos/more-data-structures-960.webp",
+      "srcset": [
+        {
+          "src": "assets/images/photos/more-data-structures-480.webp",
+          "w": 480
+        },
+        {
+          "src": "assets/images/photos/more-data-structures-960.webp",
+          "w": 960
+        },
+        {
+          "src": "assets/images/photos/more-data-structures-1067.webp",
+          "w": 1067
+        }
+      ],
+      "width": 1067,
+      "height": 800,
+      "alt": "An officer presents the \"More Data Structures\" lesson to members at their desks.",
+      "caption": "More Data Structures",
+      "inGallery": true,
+      "focus": "40% 50%"
+    },
+    {
+      "id": "contest-questions-crowd",
+      "src": "assets/images/photos/contest-questions-crowd-960.webp",
+      "srcset": [
+        {
+          "src": "assets/images/photos/contest-questions-crowd-480.webp",
+          "w": 480
+        },
+        {
+          "src": "assets/images/photos/contest-questions-crowd-960.webp",
+          "w": 960
+        },
+        {
+          "src": "assets/images/photos/contest-questions-crowd-1067.webp",
+          "w": 1067
+        }
+      ],
+      "width": 1067,
+      "height": 800,
+      "alt": "A packed meeting working through contest-style Java questions on the screen.",
+      "caption": "Contest prep",
+      "inGallery": true,
+      "focus": "50% 55%"
+    },
+    {
+      "id": "intro-to-java",
+      "src": "assets/images/photos/intro-to-java-960.webp",
+      "srcset": [
+        {
+          "src": "assets/images/photos/intro-to-java-480.webp",
+          "w": 480
+        },
+        {
+          "src": "assets/images/photos/intro-to-java-960.webp",
+          "w": 960
+        },
+        {
+          "src": "assets/images/photos/intro-to-java-1067.webp",
+          "w": 1067
+        }
+      ],
+      "width": 1067,
+      "height": 800,
+      "alt": "A member smiles next to the \"Intro to Java\" slide at a club meeting.",
+      "caption": "Intro to Java",
+      "inGallery": false,
+      "focus": "35% 45%"
+    },
+    {
+      "id": "meeting-lesson-structures",
+      "src": "assets/images/photos/meeting-lesson-structures-960.webp",
+      "srcset": [
+        {
+          "src": "assets/images/photos/meeting-lesson-structures-480.webp",
+          "w": 480
+        },
+        {
+          "src": "assets/images/photos/meeting-lesson-structures-960.webp",
+          "w": 960
+        },
+        {
+          "src": "assets/images/photos/meeting-lesson-structures-1067.webp",
+          "w": 1067
+        }
+      ],
+      "width": 1067,
+      "height": 800,
+      "alt": "An officer points to a Java data-structures question on the classroom screen while members follow along.",
+      "caption": "Data structures practice",
+      "inGallery": false,
+      "focus": "45% 50%"
+    },
+    {
+      "id": "general-info-presentation",
+      "src": "assets/images/photos/general-info-presentation-960.webp",
+      "srcset": [
+        {
+          "src": "assets/images/photos/general-info-presentation-480.webp",
+          "w": 480
+        },
+        {
+          "src": "assets/images/photos/general-info-presentation-960.webp",
+          "w": 960
+        },
+        {
+          "src": "assets/images/photos/general-info-presentation-1067.webp",
+          "w": 1067
+        }
+      ],
+      "width": 1067,
+      "height": 800,
+      "alt": "Officers present the club's general information slide to a full computer lab.",
+      "caption": "Kickoff meeting",
+      "inGallery": false,
+      "focus": "50% 55%"
+    },
+    {
+      "id": "members-in-lab",
+      "src": "assets/images/photos/members-in-lab-960.webp",
+      "srcset": [
+        {
+          "src": "assets/images/photos/members-in-lab-480.webp",
+          "w": 480
+        },
+        {
+          "src": "assets/images/photos/members-in-lab-960.webp",
+          "w": 960
+        },
+        {
+          "src": "assets/images/photos/members-in-lab-1067.webp",
+          "w": 1067
+        }
+      ],
+      "width": 1067,
+      "height": 800,
+      "alt": "Members at their desks in the computer lab, one smiling with a peace sign.",
+      "caption": "Meeting day",
+      "inGallery": false,
+      "focus": "45% 60%"
+    }
+  ]
 }

@@ -1,11 +1,12 @@
 #!/usr/bin/env node
-/* Photo optimizer for the Home "Moments" gallery (and slide covers).
+/* Photo optimizer: club photos (page headers + Home "Moments" gallery) and slide covers.
  *
  *   npm run images
  *
- * • Gallery: put JPG/PNG/WebP/HEIC photos in assets/images/originals/. Each is
- *   resized to 480/960/1600px WebP (never upscaled) in assets/images/gallery/,
- *   and data/gallery.json is updated (existing alt text/captions are kept).
+ * • Photos: put JPG/PNG/WebP/HEIC photos in assets/images/originals/. Each is
+ *   resized to 480/960/1600px WebP (never upscaled) in assets/images/photos/,
+ *   and data/gallery.json is updated. Hand-edited fields (alt, caption,
+ *   inGallery, focus) are kept. Then run `npm run build` to place them.
  * • Slide covers: put images in assets/slides/originals/; each becomes a
  *   1280×720 WebP in assets/slides/ (center-cropped to 16:9). Reference it in
  *   data/slides.json as "coverImage": "assets/slides/<name>.webp". */
@@ -26,7 +27,7 @@ async function listImages(dir) {
 
 /* ---------- Gallery ---------- */
 const galSrc = join(ROOT, 'assets/images/originals');
-const galOut = join(ROOT, 'assets/images/gallery');
+const galOut = join(ROOT, 'assets/images/photos');
 const galleryFile = join(ROOT, 'data/gallery.json');
 const gallery = JSON.parse(await readFile(galleryFile, 'utf8'));
 const existing = new Map((gallery.photos || []).map((p) => [p.id, p]));
@@ -40,10 +41,11 @@ for (const file of await listImages(galSrc)) {
   const w0 = meta.autoOrient?.width || meta.width;
   const h0 = meta.autoOrient?.height || meta.height;
   const srcset = [];
-  for (const w of [480, 960, 1600]) {
-    if (w > w0 && srcset.length) break;
-    const width = Math.min(w, w0);
-    const out = `assets/images/gallery/${id}-${width}.webp`;
+  // 480/960/1600px, never upscaled; a smaller original also gets its own full-size version.
+  const widths = [480, 960, 1600].filter((w) => w < w0);
+  if (!widths.includes(w0) && w0 <= 1600) widths.push(w0);
+  for (const width of widths) {
+    const out = `assets/images/photos/${id}-${width}.webp`;
     await sharp(join(galSrc, file)).rotate().resize({ width, withoutEnlargement: true }).webp({ quality: 78 }).toFile(join(ROOT, out));
     srcset.push({ src: out, w: width });
   }
@@ -57,7 +59,8 @@ for (const file of await listImages(galSrc)) {
     height: Math.round((largest.w * h0) / w0),
     alt: prev.alt || `TODO: describe this photo (${file})`,
     caption: prev.caption || '',
-    ...(prev.layout ? { layout: prev.layout } : {}),
+    inGallery: prev.inGallery ?? true, // show in the Home "Moments" gallery
+    focus: prev.focus || '50% 50%', // CSS object-position used when the photo is cropped
   });
   console.log(`  gallery: ${file} → ${srcset.map((s) => s.w).join('/')}px`);
 }

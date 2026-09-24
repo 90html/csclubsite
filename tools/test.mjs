@@ -90,6 +90,24 @@ for (const width of [360, 768, 1440, 2560]) {
   }
 }
 
+console.log('\nPhotos');
+{
+  for (const path of PAGES.slice(1, 7)) {
+    const { page, ctx } = await open(path);
+    const img = page.locator('.hero-photo img');
+    ok((await img.count()) === 1 && (await img.getAttribute('alt')).length > 20 && (await img.evaluate((i) => i.complete && i.naturalWidth > 0)), `${path}: header photo loads with alt text`);
+    await ctx.close();
+  }
+  const { page, ctx } = await open('/');
+  await page.locator('.gallery').scrollIntoViewIfNeeded();
+  await page.waitForTimeout(800);
+  const imgs = await page.$$eval('.gallery img', (list) => list.map((i) => ({ ok: i.complete && i.naturalWidth > 0, alt: i.alt })));
+  ok(imgs.length === 6 && imgs.every((i) => i.ok && i.alt.length > 20), 'Home gallery: 6 photos load with alt text');
+  const noAlt = await page.$$eval('img:not([alt])', (list) => list.length);
+  ok(noAlt === 0, 'Every image has an alt attribute');
+  await ctx.close();
+}
+
 console.log('\nPoints (no sheet connected)');
 {
   let sheetRequests = 0;

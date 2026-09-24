@@ -1,7 +1,7 @@
 /* Home: terminal typing, next meeting strip, latest slides, gallery, points teaser. */
 import CONFIG from '../../config.js';
 import { initApp, observeReveal } from '../core/app.js';
-import { assetUrl, loadData } from '../core/site.js';
+import { loadData } from '../core/site.js';
 import { icon } from '../core/icons.js';
 import { esc, isPlaceholder, prefersReducedMotion } from '../core/utils.js';
 import { getUpcoming, pickNextMeeting } from '../lib/calendar-data.js';
@@ -137,33 +137,6 @@ async function renderSlides() {
   }
 }
 
-/* ---------- Moments gallery ---------- */
-async function renderGallery() {
-  const section = document.querySelector('[data-gallery-section]');
-  if (!section) return;
-  try {
-    const { photos = [] } = await loadData('gallery.json');
-    if (!photos.length) return;
-    const grid = section.querySelector('[data-gallery]');
-    grid.innerHTML = photos
-      .slice(0, 8)
-      .map((p, i) => {
-        const shape = p.layout || (i === 0 ? 'is-wide is-tall' : i === 3 ? 'is-wide' : '');
-        const srcset = (p.srcset || []).map((s) => `${esc(assetUrl(s.src))} ${s.w}w`).join(', ');
-        return `<figure class="${esc(shape)}" data-reveal="stagger">
-          <img src="${esc(assetUrl(p.src))}" ${srcset ? `srcset="${srcset}" sizes="(min-width: 768px) 50vw, 100vw"` : ''}
-            alt="${esc(p.alt || '')}" width="${Number(p.width) || 800}" height="${Number(p.height) || 600}" loading="lazy" decoding="async">
-          ${p.caption ? `<figcaption>${esc(p.caption)}</figcaption>` : ''}
-        </figure>`;
-      })
-      .join('');
-    section.hidden = false;
-    observeReveal(section);
-  } catch {
-    /* gallery is optional */
-  }
-}
-
 /* ---------- Points teaser → Points page with the name in the #hash (never sent to a server) ---------- */
 function initTeaser() {
   document.querySelectorAll('[data-teaser-live]').forEach((el) => {
@@ -188,5 +161,4 @@ typeTerminal();
 fillStats();
 renderUpcoming();
 renderSlides();
-renderGallery();
 initTeaser();

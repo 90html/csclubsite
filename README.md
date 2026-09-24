@@ -98,13 +98,19 @@ Watch the commas: every object except the last one in the list needs a `,` after
 
 Edit `data/officers.json`. The groups display in order, and `"featured": true` gives a group large cards (the President). To add a photo, put a square image in `assets/images/officers/` and set `"photo": "assets/images/officers/name.webp"`. Leave it `""` to show initials.
 
-## 5. Photos ("Moments" gallery)
+## 5. Photos
+
+Club photos appear in each page's header and in the Home page's "Moments" gallery.
 
 1. Copy photos into `assets/images/originals/`.
-2. Run `npm install` (first time only), then `npm run images`. This creates optimized WebP files at three sizes and fills in `data/gallery.json`.
-3. Open `data/gallery.json` and replace each `"TODO: describe this photo"` with real alt text, such as "Members solving problems at a practice contest".
-
-The gallery appears on the Home page automatically.
+2. Run `npm install` (first time only), then `npm run images`. This creates optimized WebP files (480px, 960px and full size) in `assets/images/photos/` and adds each photo to `data/gallery.json`.
+3. In `data/gallery.json`, for each photo:
+   - replace `"TODO: describe this photo"` with a real description (`alt`), which screen readers read aloud
+   - optionally set a short `caption`
+   - set `inGallery` to `true` or `false` to show it in the Home gallery or not (the first 6 are shown, in file order)
+   - set `focus` to choose what stays in view when the photo is cropped, e.g. `"50% 30%"` keeps the upper middle
+4. To change a page's header photo, edit its `<figure class="hero-photo" data-photo="…">` and put a different photo id there.
+5. Run `npm run build`.
 
 ---
 
