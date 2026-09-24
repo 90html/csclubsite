@@ -132,9 +132,8 @@ export function headerPartial(page) {
   const root = rootFor(page);
   const href = (p) => `${root}${p.path}` || './';
   const current = (p) => (p.key === page.key ? ' aria-current="page"' : '');
-  const links = PAGES.map((p) => `<a href="${href(p)}"${current(p)}>${p.nav}</a>`).join('\n        ');
+  const links = PAGES.map((p) => `<a href="${href(p)}" data-nav="${p.key}"${current(p)}>${p.nav}</a>`).join('\n        ');
   const drawerLinks = PAGES.map((p) => `<li><a href="${href(p)}"${current(p)}>${p.nav}</a></li>`).join('\n        ');
-  const cal = PAGES.find((p) => p.key === 'calendar');
   return `<a class="skip-link" href="#main">Skip to content</a>
 <header class="site-header">
   <div class="container site-header__inner">
@@ -146,7 +145,6 @@ export function headerPartial(page) {
       <span class="nav-pill" aria-hidden="true"></span>
         ${links}
     </nav>
-    <a class="btn btn--primary btn--sm header-cta" href="${href(cal)}">Join a Meeting</a>
     <button class="nav-toggle" type="button" aria-expanded="false" aria-controls="nav-drawer" aria-label="Open menu">
       <svg class="icon icon-menu" data-icon="menu"></svg><svg class="icon icon-close" data-icon="x"></svg>
     </button>
@@ -159,7 +157,6 @@ export function headerPartial(page) {
         ${drawerLinks}
       </ul>
     </nav>
-    <a class="btn btn--primary btn--lg" href="${href(cal)}" data-close-drawer>Join a Meeting <svg class="icon" data-icon="arrowRight"></svg></a>
   </div>
 </div>`;
 }

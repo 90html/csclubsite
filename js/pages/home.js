@@ -76,8 +76,9 @@ async function fillStats() {
 async function renderUpcoming() {
   const box = document.querySelector('[data-upcoming]');
   if (!box) return;
-  const calHref = document.querySelector('.header-cta')?.getAttribute('href') || 'calendar/';
-  const calTarget = document.querySelector('.header-cta')?.getAttribute('target');
+  const calNav = document.querySelector('.nav-links [data-nav="calendar"]');
+  const calHref = calNav?.getAttribute('href') || 'calendar/';
+  const calTarget = calNav?.getAttribute('target');
   const calLink = `<a class="btn btn--ghost" href="${esc(calHref)}"${calTarget ? ` target="${esc(calTarget)}"` : ''}>Full calendar ${icon('arrowRight')}</a>`;
   try {
     const { events } = await getUpcoming();

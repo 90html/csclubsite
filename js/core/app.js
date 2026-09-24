@@ -67,7 +67,7 @@ function initHeader() {
   };
   toggle.addEventListener('click', () => setOpen(toggle.getAttribute('aria-expanded') !== 'true'));
   drawer.addEventListener('click', (e) => {
-    if (e.target === drawer || e.target.closest('[data-close-drawer]')) setOpen(false);
+    if (e.target === drawer) setOpen(false); // click on the dimmed backdrop
   });
   document.addEventListener('keydown', (e) => {
     if (drawer.hidden) return;

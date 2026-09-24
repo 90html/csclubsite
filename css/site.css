@@ -417,9 +417,6 @@ code {
     width 0.35s var(--ease),
     opacity 0.2s;
 }
-.site-header .header-cta {
-  display: none;
-}
 .nav-toggle {
   display: inline-grid;
   place-items: center;
@@ -487,10 +484,6 @@ code {
   background: var(--grad);
   box-shadow: 0 0 10px var(--a1);
 }
-.nav-drawer .btn {
-  margin-top: var(--s-6);
-  width: 100%;
-}
 body.drawer-open {
   overflow: hidden;
 }
@@ -501,11 +494,6 @@ body.drawer-open {
   .nav-toggle,
   .nav-drawer {
     display: none !important;
-  }
-}
-@media (min-width: 75em) {
-  .site-header .header-cta {
-    display: inline-flex;
   }
 }
 
