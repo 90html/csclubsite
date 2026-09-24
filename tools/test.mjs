@@ -92,7 +92,7 @@ for (const width of [360, 768, 1440, 2560]) {
 
 console.log('\nPhotos');
 {
-  for (const path of PAGES.slice(1, 7)) {
+  for (const path of ['/getting-started/', '/slides/', '/calendar/', '/points/']) {
     const { page, ctx } = await open(path);
     const img = page.locator('.hero-photo img');
     ok((await img.count()) === 1 && (await img.getAttribute('alt')).length > 20 && (await img.evaluate((i) => i.complete && i.naturalWidth > 0)), `${path}: header photo loads with alt text`);
@@ -367,7 +367,8 @@ console.log('\nNav, contact, officers');
   const { page, ctx } = await open('/officers/');
   ok((await page.locator('.officer').count()) === 9 && (await page.locator('.sponsor').count()) === 2, '9 officers + 2 sponsors');
   ok((await page.locator('.sponsor__name').allInnerTexts()).includes('Coach Garrett'), 'Coach Garrett spelled correctly');
-  ok((await page.locator('.officer--featured .officer__name').innerText()) === 'Kavish Mehta', 'President featured');
+  ok((await page.locator('.officer__name').first().innerText()) === 'Kavish Mehta' && (await page.locator('.officer--featured').count()) === 0, 'President listed first, same card size as everyone');
+  ok((await page.locator('.hero-photo').count()) === 0, 'No header photo on Officers');
   await ctx.close();
 }
 

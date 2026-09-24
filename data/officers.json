@@ -1,9 +1,8 @@
 {
-  "_README": "Update this each year. 'photo' is optional: put a square image in assets/images/officers/ and write its path, e.g. 'assets/images/officers/kavish.webp'. Leave '' to show initials. Groups display in this order; 'featured': true makes a group's cards large.",
+  "_README": "Update this each year. 'photo' is optional: put a square image in assets/images/officers/ and write its path, e.g. 'assets/images/officers/kavish.webp'. Leave '' to show initials. Groups display in this order. Add \"featured\": true to a group to give it large cards.",
   "groups": [
     {
       "title": "President",
-      "featured": true,
       "members": [
         {
           "name": "Kavish Mehta",
