@@ -3,7 +3,7 @@ import { initApp, observeReveal } from '../core/app.js';
 import { icon } from '../core/icons.js';
 import { esc } from '../core/utils.js';
 import { getUpcoming, pickNextMeeting } from '../lib/calendar-data.js';
-import { countdownMarkup, formatTimeDate, openEventModal, startCountdown } from '../lib/event-ui.js';
+import { countdownMarkup, formatTimeDate, nextMeetingText, openEventModal, startCountdown } from '../lib/event-ui.js';
 import { loadSlides } from '../lib/slides-data.js';
 import { latestOpenId, numberSlides, slideCard, slideSkeletons } from '../lib/slide-card.js';
 
@@ -21,17 +21,16 @@ async function renderUpcoming() {
     const { events } = await getUpcoming();
     const ev = pickNextMeeting(events);
     if (!ev) {
-      box.innerHTML = `<div><p class="upcoming__label">Next up</p>
+      box.innerHTML = `<div>
         <h3 class="upcoming__title">No meetings scheduled yet</h3>
         <p class="upcoming__meta">New dates are posted on the calendar as soon as they're set.</p></div>
         <div class="upcoming__actions">${calLink}</div>`;
       return;
     }
-    const live = ev.start <= new Date();
+    const { live, heading, name } = nextMeetingText(ev);
     box.innerHTML = `<div>
-        <p class="upcoming__label"><span class="live-dot" aria-hidden="true"></span> ${live ? 'Happening now' : 'Next up'}</p>
-        <h3 class="upcoming__title">${esc(ev.title)}</h3>
-        <p class="upcoming__meta">${esc(formatTimeDate(ev))}${ev.location ? ` · ${esc(ev.location)}` : ''}</p>
+        <h3 class="upcoming__title">${heading}</h3>
+        <p class="upcoming__meta">${name ? `${esc(name)} · ` : ''}${esc(formatTimeDate(ev))}${ev.location ? ` · ${esc(ev.location)}` : ''}</p>
       </div>
       ${live ? '' : `<div aria-label="Time until it starts">${countdownMarkup()}</div>`}
       <div class="upcoming__actions">
@@ -42,7 +41,7 @@ async function renderUpcoming() {
     const cd = box.querySelector('.countdown');
     if (cd) startCountdown(cd, ev, () => renderUpcoming());
   } catch {
-    box.innerHTML = `<div><p class="upcoming__label">Next up</p>
+    box.innerHTML = `<div>
       <h3 class="upcoming__title">Check the calendar for the next meeting</h3>
       <p class="upcoming__meta">We couldn't load upcoming events right now.</p></div>
       <div class="upcoming__actions">${calLink}</div>`;

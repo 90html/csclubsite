@@ -88,23 +88,27 @@
         </div>
         <figure class="hero-photo" data-photo="i-love-cs" data-sizes="(min-width: 62em) 45vw, 100vw" data-eager><img src="assets/images/photos/i-love-cs-960.webp" srcset="assets/images/photos/i-love-cs-480.webp 480w, assets/images/photos/i-love-cs-960.webp 960w, assets/images/photos/i-love-cs-1067.webp 1067w" sizes="(min-width: 62em) 45vw, 100vw" width="1067" height="800" alt="Members smiling and giving thumbs up behind an &quot;I love CS&quot; whiteboard sign." loading="eager" fetchpriority="high" decoding="async" style="object-position: 50% 45%"></figure>
       </div>
-
-      <dl class="stats" data-meeting-group>
-        <div class="stat" data-meeting-item><dt class="stat__label">When</dt><dd class="stat__value" data-meeting="day">Every other Monday</dd></div>
-        <div class="stat" data-meeting-item><dt class="stat__label">Time</dt><dd class="stat__value" data-meeting="time">3:00 – 3:45 PM</dd></div>
-        <div class="stat" data-meeting-item><dt class="stat__label">Where</dt><dd class="stat__value" data-meeting="room">Room B105</dd></div>
-        <div class="stat"><dt class="stat__label">We teach</dt><dd class="stat__value">Java + Python</dd></div>
-      </dl>
     </div>
   </section>
 
+  <section class="section--tight" aria-labelledby="upcoming-title">
+    <div class="container">
+      <h2 class="sr-only" id="upcoming-title">Upcoming meeting</h2>
+      <div class="card card--pad upcoming" data-upcoming data-reveal>
+        <div>
+                    <div class="skeleton skeleton--line h-lg w-80"></div>
+          <div class="skeleton skeleton--line w-40"></div>
+        </div>
+      </div>
+    </div>
+  </section>
   <section class="section" aria-labelledby="what-title">
     <div class="container">
       <h2 class="section-title" id="what-title" data-reveal>What we do</h2>
       <div class="features">
         <article class="card card--pad card--hover feature" data-reveal="stagger">
           <h3>Meetings</h3>
-          <p>Lessons every other Monday, from your first <code>println</code> to real algorithms.</p>
+          <p><span data-meeting="day">Every other Monday</span>, from <span data-meeting="time">3:00 – 3:45 PM</span> in <span data-meeting="room">Room B105</span></p>
         </article>
         <article class="card card--pad card--hover feature" data-reveal="stagger">
           <h3>Contests</h3>
@@ -122,18 +126,6 @@
     </div>
   </section>
 
-  <section class="section--tight" aria-labelledby="upcoming-title">
-    <div class="container">
-      <h2 class="sr-only" id="upcoming-title">Upcoming meeting</h2>
-      <div class="card card--pad upcoming" data-upcoming data-reveal>
-        <div>
-          <p class="upcoming__label"><span class="live-dot" aria-hidden="true"></span> Next up</p>
-          <div class="skeleton skeleton--line h-lg w-80"></div>
-          <div class="skeleton skeleton--line w-40"></div>
-        </div>
-      </div>
-    </div>
-  </section>
 
   <section class="section" aria-labelledby="slides-title">
     <div class="container">

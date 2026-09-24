@@ -1,4 +1,5 @@
 /* Event details modal, "when" formatting and countdowns (Calendar + Home). */
+import CONFIG from '../../config.js';
 import { openModal } from '../core/modal.js';
 import { icon } from '../core/icons.js';
 import { addDays, esc, fmt, formatTime, sameDay } from '../core/utils.js';
@@ -103,6 +104,14 @@ function setUnit(u, text) {
   if (digits.children.length !== text.length) digits.replaceChildren(...[...text].map(digitColumn));
   [...text].forEach((c, i) => setDigit(digits.children[i], Number(c)));
   u.querySelector('.sr-only').textContent = text;
+}
+
+/** Heading for the next-meeting card, plus the event's own name when it isn't
+ * a regular meeting (e.g. "End-of-Semester Pizza Party"). */
+export function nextMeetingText(ev) {
+  const live = ev.start <= new Date();
+  const regular = ev.title === (CONFIG.MEETING?.SCHEDULE?.title || 'Club Meeting');
+  return { live, heading: live ? 'Happening now' : 'Next meeting', name: regular ? '' : ev.title };
 }
 
 /** Live countdown; returns a stop() function. */

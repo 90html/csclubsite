@@ -4,7 +4,7 @@ import { icon } from '../core/icons.js';
 import { openModal } from '../core/modal.js';
 import { addDays, esc, fmt, formatTime, sameDay, startOfDay } from '../core/utils.js';
 import { EVENT_TYPE_LEGEND, getEvents, getUpcoming, pickNextMeeting, RANGE, resetCalendarData, SOURCE, sourceNote } from '../lib/calendar-data.js';
-import { countdownMarkup, formatTimeDate, formatWhen, openEventModal, startCountdown } from '../lib/event-ui.js';
+import { countdownMarkup, formatTimeDate, formatWhen, nextMeetingText, openEventModal, startCountdown } from '../lib/event-ui.js';
 
 initApp();
 
@@ -142,15 +142,15 @@ async function renderNext() {
     const { events } = await getUpcoming();
     const ev = pickNextMeeting(events);
     if (!ev) {
-      box.innerHTML = `<div class="next-card__main"><p class="upcoming__label">Next meeting</p>
+      box.innerHTML = `<div class="next-card__main">
         <h2>Nothing scheduled yet</h2><p class="next-card__when">New dates will show up here automatically.</p></div>`;
       return;
     }
-    const live = ev.start <= new Date();
+    const { live, heading, name } = nextMeetingText(ev);
     box.innerHTML = `<div class="next-card__main">
-        <p class="upcoming__label"><span class="live-dot" aria-hidden="true"></span> ${live ? 'Happening now' : 'Next meeting'}</p>
-        <h2>${esc(ev.title)}</h2>
+        <h2>${heading}</h2>
         <ul class="facts">
+          ${name ? `<li>${esc(name)}</li>` : ''}
           <li>${esc(formatTimeDate(ev))}</li>
           ${ev.location ? `<li>${esc(ev.location)}</li>` : ''}
         </ul>
@@ -163,8 +163,8 @@ async function renderNext() {
     const cd = box.querySelector('.countdown');
     if (cd) startCountdown(cd, ev, () => renderNext());
   } catch {
-    box.innerHTML = `<div class="next-card__main"><p class="upcoming__label">Next meeting</p>
-      <h2>Unavailable right now</h2><p class="next-card__when">We couldn't reach the calendar. The month view below has a retry button.</p></div>`;
+    box.innerHTML = `<div class="next-card__main">
+      <h2>Next meeting unavailable</h2><p class="next-card__when">We couldn't reach the calendar. The month view below has a retry button.</p></div>`;
   }
 }
 

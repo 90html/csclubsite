@@ -220,7 +220,7 @@ console.log('\nCalendar (schedule + FBISD + MSA)');
 {
   const { page, ctx, errors } = await open('/calendar/', { time: '2026-09-24T15:00:00Z' });
   ok(await page.locator('.demo-banner--info').isVisible(), 'Schedule notice shown');
-  ok((await page.locator('.next-card h2').innerText()) === 'Club Meeting', 'Next meeting title');
+  ok((await page.locator('.next-card h2').innerText()) === 'Next meeting', 'Next meeting title');
   ok((await page.locator('.next-card').innerText()).includes('Mon, Sep 28'), 'Next meeting is Mon Sep 28');
   const sep = await page.locator('.day:not(.day--out)').filter({ has: page.locator('.pill[data-type="meeting"]') }).allInnerTexts();
   ok(sep.length === 2 && sep[0].startsWith('21') && sep[1].startsWith('28'), 'September meetings: 21st and 28th');
@@ -319,7 +319,7 @@ console.log('\nCalendar (schedule + FBISD + MSA)');
   });
   ok(await page.locator('[data-msa-error]').isVisible(), 'MSA calendar failure: notice shown');
   ok((await page.locator('[data-msa-detail]').innerText()).includes('Requests from referer <empty> are blocked.'), "Notice shows Google's reason");
-  ok((await page.locator('.next-card h2').innerText()) === 'Club Meeting', 'Meetings still shown without MSA data');
+  ok((await page.locator('.next-card h2').innerText()) === 'Next meeting', 'Meetings still shown without MSA data');
   fail = false;
   await page.locator('[data-msa-retry]').click();
   await page.waitForTimeout(500);
