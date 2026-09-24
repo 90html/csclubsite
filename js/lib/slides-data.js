@@ -31,8 +31,8 @@ export async function loadSlides() {
   const json = await loadData('slides.json');
   const list = Array.isArray(json) ? json : json.slides || [];
   return list
-    .filter((s) => s && s.title && s.date)
-    .map((s, i) => ({ ...s, id: s.id || `slide-${i}`, tags: Array.isArray(s.tags) ? s.tags : s.topic ? [s.topic] : [], _date: parseDate(s.date) }))
+    .filter((s) => s && s.date)
+    .map((s, i) => ({ ...s, id: s.id || `slide-${i}`, title: String(s.title || '').trim() || 'Club Meeting', tags: Array.isArray(s.tags) ? s.tags : s.topic ? [s.topic] : [], _date: parseDate(s.date) }))
     .filter((s) => s._date)
     .sort((a, b) => b._date - a._date);
 }

@@ -7,12 +7,9 @@ const CHECKS = [
   ['Meeting day', 'MEETING.day', () => CONFIG.MEETING.day],
   ['Meeting time', 'MEETING.time', () => CONFIG.MEETING.time],
   ['Meeting room', 'MEETING.room', () => CONFIG.MEETING.room],
-  ['Google Calendar ID', 'CALENDAR.CALENDAR_ID', () => CONFIG.CALENDAR.CALENDAR_ID],
   ['Google Calendar API key', 'CALENDAR.CALENDAR_API_KEY', () => CONFIG.CALENDAR.CALENDAR_API_KEY],
+  ['MSA calendar ID', 'CALENDAR.MSA_CALENDAR_ID', () => CONFIG.CALENDAR.MSA_CALENDAR_ID],
   ['Points sheet (published CSV)', 'POINTS.POINTS_SHEET_URL', () => CONFIG.POINTS.POINTS_SHEET_URL],
-  ['Points per meeting', 'POINTS.POINT_VALUES.meeting', () => CONFIG.POINTS.POINT_VALUES.meeting],
-  ['Points per problem', 'POINTS.POINT_VALUES.problem', () => CONFIG.POINTS.POINT_VALUES.problem],
-  ['Points per contest', 'POINTS.POINT_VALUES.contest', () => CONFIG.POINTS.POINT_VALUES.contest],
 ];
 
 export function showSetupPanel() {

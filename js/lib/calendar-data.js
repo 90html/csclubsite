@@ -1,76 +1,94 @@
-/* Calendar data: Google Calendar API v3 (events.list) → normalized events.
- * Falls back to generated DEMO events while the calendar ID or API key in
- * config.js is still a placeholder. */
+/* Calendar data. Combines three sources into one list of events:
+ *   1. Club meetings: the every-other-week schedule in config.js (or the
+ *      club's own Google Calendar, if CALENDAR_ID is ever set).
+ *   2. School days: FBISD holidays, breaks and exams (data/school-calendar.json).
+ *   3. MSA events: MSA meetings and socials from the MSA master calendar
+ *      (Google Calendar API v3). Other clubs' events there are ignored.
+ * A meeting that lands on a no-school day or an MSA event day moves to the
+ * next Monday, or is canceled if that day is blocked too. */
 import CONFIG from '../../config.js';
-import { cache } from '../core/site.js';
+import { cache, loadData } from '../core/site.js';
 import { addDays, isPlaceholder, parseLocalDate, startOfDay, zonedTime } from '../core/utils.js';
 
 const CAL = CONFIG.CALENDAR;
 const SCHEDULE = CONFIG.MEETING?.SCHEDULE;
-const HAS_GOOGLE = !isPlaceholder(CAL.CALENDAR_ID) && !isPlaceholder(CAL.CALENDAR_API_KEY);
+const TZ = CONFIG.MEETING?.timezone || 'America/Chicago';
+const HAS_KEY = !isPlaceholder(CAL.CALENDAR_API_KEY);
+const HAS_CLUB_GOOGLE = HAS_KEY && !isPlaceholder(CAL.CALENDAR_ID);
+const HAS_MSA = HAS_KEY && !isPlaceholder(CAL.MSA_CALENDAR_ID);
 const HAS_SCHEDULE = Boolean(SCHEDULE && /^\d{4}-\d{2}-\d{2}$/.test(SCHEDULE.firstMeeting || '') && SCHEDULE.everyWeeks > 0);
 
-/** Where events come from: 'google' (Calendar API), 'schedule' (config.js), or 'demo'. */
-export const SOURCE = HAS_GOOGLE ? 'google' : HAS_SCHEDULE ? 'schedule' : 'demo';
-export const IS_DEMO = SOURCE === 'demo';
+/** Where club meetings come from: 'google' (club calendar) or 'schedule' (config.js). */
+export const SOURCE = HAS_CLUB_GOOGLE ? 'google' : 'schedule';
 
-/** Notice shown above the calendar when it isn't reading Google Calendar yet (HTML). */
-export function sourceNote() {
-  if (SOURCE === 'schedule') {
-    const when = [CONFIG.MEETING.day, CONFIG.MEETING.time].filter((v) => !isPlaceholder(v)).join(' at ');
-    return `<strong>Our regular meeting schedule${when ? `: ${when}` : ''}.</strong> Contests, workshops and date changes will appear here once the full club calendar is connected.`;
-  }
-  if (SOURCE === 'demo') {
-    return '<strong>Demo data.</strong> These sample events are shown because the Google Calendar ID and API key in <code>config.js</code> haven\'t been added yet.';
-  }
-  return '';
-}
+/** First and last viewable day of the calendar (local dates). */
+export const RANGE = {
+  start: parseLocalDate(CAL.RANGE?.start || '2026-08-01'),
+  end: parseLocalDate(CAL.RANGE?.end || '2027-05-31'),
+};
 
-const OTHER = { id: 'other', label: 'Event' };
+const TYPES = {
+  meeting: { id: 'meeting', label: 'Meeting' },
+  canceled: { id: 'other', label: 'Canceled' },
+  school: { id: 'school', label: 'School' },
+  msa: { id: 'msa', label: 'MSA' },
+  social: { id: 'social', label: 'Social' },
+  other: { id: 'other', label: 'Event' },
+};
 
-/** Detect an event's type from keywords in config (title first, then description). */
+/** Detect a club-calendar event's type from keywords in config (title first, then description). */
 export function detectType(title = '', description = '') {
   const types = CAL.EVENT_TYPES || [];
   // Keywords must start a word ("uil" matches "UIL" but not "build").
-  const escRe = (s) => s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-  const find = (text) =>
-    types.find((t) => t.keywords.some((k) => new RegExp(`\\b${escRe(k)}`, 'i').test(text)));
+  const find = (text) => types.find((t) => t.keywords.some((k) => wordStart(k).test(text)));
   const hit = find(title) || find(description.replace(/<[^>]+>/g, ' '));
-  return hit ? { id: hit.id, label: hit.label } : OTHER;
+  return hit ? { id: hit.id, label: hit.label } : TYPES.other;
 }
 
-const LEGEND_ORDER = ['meeting', 'contest', 'workshop', 'social'];
+function wordStart(keyword) {
+  return new RegExp(`\\b${keyword.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}`, 'i');
+}
+
 export const EVENT_TYPE_LEGEND = [
-  ...(CAL.EVENT_TYPES || [])
-    .map((t) => ({ id: t.id, label: t.label }))
-    .sort((a, b) => (LEGEND_ORDER.indexOf(a.id) + 1 || 99) - (LEGEND_ORDER.indexOf(b.id) + 1 || 99)),
-  OTHER,
+  TYPES.meeting,
+  ...(CAL.EVENT_TYPES || []).filter((t) => t.id !== 'meeting' && t.id !== 'social').map((t) => ({ id: t.id, label: t.label })),
+  TYPES.social,
+  { id: 'msa', label: 'MSA event' },
+  { id: 'school', label: 'School calendar' },
+  { id: 'other', label: 'Canceled / other' },
 ];
 
-/** Turn a Google API item into our event shape. */
-function normalize(item) {
+/** Notice shown above the calendar (HTML). */
+export function sourceNote() {
+  if (SOURCE === 'google') return '';
+  const when = [CONFIG.MEETING.day, CONFIG.MEETING.time, CONFIG.MEETING.room].filter((v) => !isPlaceholder(v)).join(', ');
+  return `<strong>Club meetings: ${when}.</strong> When school is out or MSA has an event that day, the meeting moves to the next Monday. School holidays come from the FBISD 2026–27 calendar${HAS_MSA ? ' and MSA events from the MSA master calendar' : ''}.`;
+}
+
+/* ---------------- Helpers ---------------- */
+const pad = (n) => String(n).padStart(2, '0');
+const ymdLocal = (d) => `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
+const ymdInTz = (d) => new Intl.DateTimeFormat('en-CA', { timeZone: TZ, year: 'numeric', month: '2-digit', day: '2-digit' }).format(d);
+const addDaysYmd = (ymd, n) => {
+  const [y, m, d] = ymd.split('-').map(Number);
+  return new Date(Date.UTC(y, m - 1, d + n)).toISOString().slice(0, 10);
+};
+const prettyDay = (ymd) =>
+  new Intl.DateTimeFormat(undefined, { weekday: 'short', month: 'short', day: 'numeric', timeZone: 'UTC' }).format(new Date(`${ymd}T12:00:00Z`));
+
+/** Google API item → our event shape. */
+function normalize(item, type) {
   const allDay = Boolean(item.start?.date);
   const start = allDay ? parseLocalDate(item.start.date) : new Date(item.start?.dateTime);
   let end = allDay ? parseLocalDate(item.end?.date) : new Date(item.end?.dateTime);
   if (!end || Number.isNaN(end.getTime())) end = allDay ? addDays(start, 1) : start;
   const title = item.summary?.trim() || 'Untitled event';
   const description = item.description || '';
-  return {
-    id: item.id,
-    title,
-    description,
-    location: item.location || '',
-    start,
-    end, // exclusive for all-day events (Google convention)
-    allDay,
-    type: detectType(title, description),
-  };
+  return { id: item.id, title, description, location: item.location || '', start, end, allDay, type: type || detectType(title, description) };
 }
 
-class CalendarError extends Error {}
-
-async function fetchRange(timeMin, timeMax) {
-  const key = `cal:${CAL.CALENDAR_ID}:${timeMin.toISOString()}:${timeMax.toISOString()}`;
+async function fetchGoogle(calendarId, timeMin, timeMax) {
+  const key = `cal:${calendarId}:${timeMin.toISOString()}:${timeMax.toISOString()}`;
   const cached = cache.get(key, (CAL.CACHE_MINUTES || 5) * 60_000);
   if (cached) return cached;
 
@@ -86,21 +104,21 @@ async function fetchRange(timeMin, timeMax) {
       maxResults: '250',
     });
     if (pageToken) params.set('pageToken', pageToken);
-    const url = `https://www.googleapis.com/calendar/v3/calendars/${encodeURIComponent(CAL.CALENDAR_ID)}/events?${params}`;
+    const url = `https://www.googleapis.com/calendar/v3/calendars/${encodeURIComponent(calendarId)}/events?${params}`;
     let res;
     try {
       res = await fetch(url);
     } catch {
-      throw new CalendarError('Couldn’t reach Google Calendar. Check your connection and try again.');
+      throw new Error('Couldn’t reach Google Calendar. Check your connection and try again.');
     }
     if (!res.ok) {
-      const hint =
+      throw new Error(
         res.status === 404
           ? 'The calendar wasn’t found. Is it public, and is the Calendar ID right?'
           : res.status === 403 || res.status === 400
             ? 'Google refused the request. Check the API key and its website restrictions.'
-            : `Google Calendar returned an error (${res.status}).`;
-      throw new CalendarError(hint);
+            : `Google Calendar returned an error (${res.status}).`,
+      );
     }
     const json = await res.json();
     items.push(...(json.items || []).filter((i) => i.status !== 'cancelled'));
@@ -111,100 +129,142 @@ async function fetchRange(timeMin, timeMax) {
   return items;
 }
 
-/* ---------------- Regular schedule (until Google Calendar is connected) ---------------- */
-function scheduleItems(timeMin, timeMax) {
-  const tz = CONFIG.MEETING.timezone || 'America/Chicago';
-  const [y, m, d] = SCHEDULE.firstMeeting.split('-').map(Number);
-  const stepDays = 7 * SCHEDULE.everyWeeks;
-  const dayMs = 864e5;
-  const firstUtc = Date.UTC(y, m - 1, d);
-  // Start at the first occurrence that could overlap the range (never before firstMeeting).
-  const k0 = Math.max(0, Math.floor((timeMin.getTime() - firstUtc) / (stepDays * dayMs)) - 1);
-  const room = isPlaceholder(CONFIG.MEETING.room) ? '' : CONFIG.MEETING.room;
-  const items = [];
-  for (let k = k0; ; k++) {
-    const date = new Date(firstUtc + k * stepDays * dayMs).toISOString().slice(0, 10);
-    const start = zonedTime(date, SCHEDULE.startTime24 || '16:00', tz);
-    if (start >= timeMax) break;
-    const end = new Date(start.getTime() + (SCHEDULE.durationMinutes || 60) * 60_000);
-    items.push({
-      id: `meeting-${date}`,
-      summary: SCHEDULE.title || 'Club Meeting',
-      description: 'Regular club meeting. Everyone is welcome, and no experience is needed!',
-      location: room,
-      start: { dateTime: start.toISOString() },
-      end: { dateTime: end.toISOString() },
-    });
-  }
-  return items;
+/** MSA master calendar events that matter to us (MSA meetings + socials). */
+function isMsaEvent(item) {
+  const title = item.summary || '';
+  const has = (list) => (list || []).some((k) => wordStart(k).test(title));
+  return has(CAL.MSA_KEYWORDS) && !has(CAL.MSA_IGNORE);
 }
 
-/* ---------------- Demo data (only if neither Google nor a schedule is set) ---------------- */
-const DEMO_TOPICS = [
-  'Java Basics', 'Loops & Arrays', 'Strings', 'Recursion', 'Sorting', 'ArrayLists',
-  'Maps & Sets', 'Greedy Algorithms', 'Binary Search', 'Graphs: BFS & DFS', 'Dynamic Programming',
-];
-const DEMO_DESC = 'This is a <b>demo event</b>. Connect your Google Calendar in <code>config.js</code> to show real events. Practice problems: https://codingbat.com/java';
+/** Every calendar day ("YYYY-MM-DD", club timezone) an event touches. */
+function daysOf(ev) {
+  const days = [];
+  const first = ev.allDay ? ymdLocal(ev.start) : ymdInTz(ev.start);
+  const last = ev.allDay ? ymdLocal(addDays(ev.end, -1)) : ymdInTz(new Date(ev.end.getTime() - 1));
+  for (let d = first; d <= last; d = addDaysYmd(d, 1)) days.push(d);
+  return days;
+}
 
-function demoItems(timeMin, timeMax) {
-  const items = [];
-  const push = (id, summary, start, end, extra = {}) =>
-    items.push({ id, summary, description: DEMO_DESC, location: 'Demo Room', start, end, ...extra });
-  const at = (d, h, m) => new Date(d.getFullYear(), d.getMonth(), d.getDate(), h, m).toISOString();
-  const pad = (n) => String(n).padStart(2, '0');
-  const dateOnly = (d) => `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
+/* ---------------- Club meetings from the schedule ---------------- */
+function meetingEvent(date, extra = {}) {
+  const start = zonedTime(date, SCHEDULE.startTime24 || '15:00', TZ);
+  const end = new Date(start.getTime() + (SCHEDULE.durationMinutes || 45) * 60_000);
+  return {
+    id: `meeting-${date}`,
+    title: SCHEDULE.title || 'Club Meeting',
+    description: 'Regular club meeting. Everyone is welcome, and no experience is needed!',
+    location: isPlaceholder(CONFIG.MEETING.room) ? '' : CONFIG.MEETING.room,
+    start,
+    end,
+    allDay: false,
+    type: TYPES.meeting,
+    ...extra,
+  };
+}
 
-  for (let d = startOfDay(timeMin); d < timeMax; d = addDays(d, 1)) {
-    const dow = d.getDay();
-    const dom = d.getDate();
-    const week = Math.floor((d - new Date(2026, 0, 1)) / (7 * 864e5));
-    const nextWeek = addDays(d, 7);
-    if (dow === 4) {
-      push(`m${dateOnly(d)}`, `Club Meeting: ${DEMO_TOPICS[((week % DEMO_TOPICS.length) + DEMO_TOPICS.length) % DEMO_TOPICS.length]}`,
-        { dateTime: at(d, 16, 15) }, { dateTime: at(d, 17, 15) });
+/** @param {Map<string,string>} blocked day → reason  @param {string} lastDay YYYY-MM-DD */
+function scheduleMeetings(blocked, lastDay) {
+  if (!HAS_SCHEDULE) return [];
+  const regular = [];
+  for (let d = SCHEDULE.firstMeeting; d <= lastDay; d = addDaysYmd(d, 7 * SCHEDULE.everyWeeks)) regular.push(d);
+  const regularSet = new Set(regular);
+  const out = (SCHEDULE.extraMeetings || []).filter((d) => !regularSet.has(d)).map((d) => meetingEvent(d));
+  for (const d of regular) {
+    const reason = blocked.get(d);
+    if (!reason) {
+      out.push(meetingEvent(d));
+      continue;
     }
-    if (dow === 6 && dom >= 8 && dom <= 14) {
-      push(`c${dateOnly(d)}`, 'Practice Contest (UIL-style)', { dateTime: at(d, 9, 0) }, { dateTime: at(d, 12, 0) });
-    }
-    if (dow === 2 && dom >= 15 && dom <= 21) {
-      push(`w${dateOnly(d)}`, 'Workshop: Setting Up Your IDE', { dateTime: at(d, 16, 15) }, { dateTime: at(d, 17, 0) });
-    }
-    if (dow === 5 && nextWeek.getMonth() !== d.getMonth()) {
-      push(`s${dateOnly(d)}`, 'Pizza Social & Game Night', { dateTime: at(d, 16, 0) }, { dateTime: at(d, 17, 30) });
-    }
-    if (dow === 6 && dom >= 22 && dom <= 28 && d.getMonth() % 2 === 0) {
-      push(`h${dateOnly(d)}`, 'Weekend Hackathon', { date: dateOnly(d) }, { date: dateOnly(addDays(d, 2)) });
+    const next = addDaysYmd(d, 7);
+    if (next <= lastDay && !blocked.has(next) && !regularSet.has(next)) {
+      out.push(meetingEvent(next, { description: `Moved from ${prettyDay(d)} (${reason}). Everyone is welcome!` }));
+    } else {
+      out.push(
+        meetingEvent(d, {
+          id: `canceled-${d}`,
+          title: 'No club meeting',
+          description: `Canceled: ${reason}.${next <= lastDay && blocked.has(next) ? ` The next Monday is out too (${blocked.get(next)}).` : ''}`,
+          location: '',
+          type: TYPES.canceled,
+          canceled: true,
+        }),
+      );
     }
   }
-  return items.filter((i) => {
-    const s = new Date(i.start.dateTime || i.start.date);
-    return s < timeMax && s >= addDays(timeMin, -3);
-  });
+  return out;
+}
+
+/* ---------------- The whole school year, loaded once ---------------- */
+let yearPromise;
+function loadYear() {
+  if (!yearPromise) {
+    yearPromise = (async () => {
+      const yearStart = RANGE.start;
+      const yearEnd = addDays(RANGE.end, 1);
+      const [school, msaResult] = await Promise.all([
+        loadData('school-calendar.json').catch(() => ({ events: [] })),
+        HAS_MSA
+          ? fetchGoogle(CAL.MSA_CALENDAR_ID, yearStart, yearEnd).then((items) => ({ items }), (error) => ({ items: [], error }))
+          : { items: [] },
+      ]);
+
+      const schoolEvents = (school.events || []).map((e, i) => ({
+        id: `school-${i}`,
+        title: e.title,
+        description: 'From the FBISD 2026–27 instructional calendar.',
+        location: '',
+        start: parseLocalDate(e.start),
+        end: addDays(parseLocalDate(e.end || e.start), 1),
+        allDay: true,
+        type: TYPES.school,
+        noSchool: Boolean(e.noSchool),
+      }));
+      const msaEvents = msaResult.items.filter(isMsaEvent).map((item) => {
+        const ev = normalize(item, /\bsocial/i.test(item.summary || '') ? TYPES.social : TYPES.msa);
+        ev.description ||= 'From the Dulles MSA master calendar.';
+        return ev;
+      });
+
+      // Days that block a club meeting, with the reason.
+      const blocked = new Map();
+      for (const ev of schoolEvents) if (ev.noSchool) for (const d of daysOf(ev)) blocked.set(d, ev.title);
+      for (const ev of msaEvents) for (const d of daysOf(ev)) if (!blocked.has(d)) blocked.set(d, ev.title);
+
+      const lastDay = school.lastDay || ymdLocal(RANGE.end);
+      const club =
+        SOURCE === 'google'
+          ? (await fetchGoogle(CAL.CALENDAR_ID, yearStart, yearEnd)).map((item) => normalize(item))
+          : scheduleMeetings(blocked, lastDay);
+
+      const events = [...club, ...msaEvents, ...schoolEvents].sort((a, b) => a.start - b.start || a.end - b.end);
+      return { events, msaError: msaResult.error || null };
+    })();
+    // A failed load (e.g. offline) can be retried.
+    yearPromise.catch(() => {
+      yearPromise = undefined;
+    });
+  }
+  return yearPromise;
 }
 
 /**
  * Events overlapping [timeMin, timeMax), sorted by start.
- * @returns {Promise<{ events: object[], demo: boolean }>}
+ * @returns {Promise<{ events: object[], msaError: Error|null }>}
  */
 export async function getEvents(timeMin, timeMax) {
-  const raw =
-    SOURCE === 'google' ? await fetchRange(timeMin, timeMax) : SOURCE === 'schedule' ? scheduleItems(timeMin, timeMax) : demoItems(timeMin, timeMax);
-  const events = raw
-    .map(normalize)
-    .filter((e) => e.end > timeMin && e.start < timeMax)
-    .sort((a, b) => a.start - b.start || a.end - b.end);
-  return { events, demo: IS_DEMO, source: SOURCE };
+  const { events, msaError } = await loadYear();
+  return { events: events.filter((e) => e.end > timeMin && e.start < timeMax), msaError };
 }
 
 /** Upcoming (or in-progress) events for the next ~4 months. */
 export async function getUpcoming() {
   const now = new Date();
-  const from = new Date(now.getFullYear(), now.getMonth(), now.getDate());
-  const { events, demo, source } = await getEvents(from, addDays(from, 120));
-  return { events: events.filter((e) => e.end > now), demo, source };
+  const from = startOfDay(now);
+  const { events } = await getEvents(from, addDays(from, 120));
+  return { events: events.filter((e) => e.end > now) };
 }
 
-/** The next meeting-type event (or the next event if none is a meeting). */
+/** The next club meeting (skips canceled ones and non-club events). */
 export function pickNextMeeting(events) {
-  return events.find((e) => e.type.id === 'meeting') || events[0] || null;
+  return events.find((e) => e.type.id === 'meeting' && !e.canceled) || null;
 }

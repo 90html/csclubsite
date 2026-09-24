@@ -3,7 +3,7 @@ import { initApp } from '../core/app.js';
 import { icon } from '../core/icons.js';
 import { openModal } from '../core/modal.js';
 import { addDays, esc, fmt, formatTime, sameDay, startOfDay } from '../core/utils.js';
-import { EVENT_TYPE_LEGEND, getEvents, getUpcoming, pickNextMeeting, SOURCE, sourceNote } from '../lib/calendar-data.js';
+import { EVENT_TYPE_LEGEND, getEvents, getUpcoming, pickNextMeeting, RANGE, SOURCE, sourceNote } from '../lib/calendar-data.js';
 import { countdownMarkup, formatWhen, openEventModal, startCountdown } from '../lib/event-ui.js';
 
 initApp();
@@ -14,8 +14,12 @@ const tabs = [...document.querySelectorAll('[role="tab"][data-view]')];
 const MAX_PILLS = 3;
 
 const today = startOfDay(new Date());
+const firstMonth = new Date(RANGE.start.getFullYear(), RANGE.start.getMonth(), 1);
+const lastMonth = new Date(RANGE.end.getFullYear(), RANGE.end.getMonth(), 1);
+/** Keep a month inside the school-year range from config.js. */
+const clampMonth = (m) => (m < firstMonth ? firstMonth : m > lastMonth ? lastMonth : m);
 const state = {
-  month: new Date(today.getFullYear(), today.getMonth(), 1),
+  month: clampMonth(new Date(today.getFullYear(), today.getMonth(), 1)),
   view: matchMedia('(min-width: 48em)').matches ? 'month' : 'agenda',
   events: null, // null until the first month has loaded
 };
@@ -98,6 +102,8 @@ function renderAgenda() {
 
 function render() {
   title.textContent = fmt(state.month, { month: 'long', year: 'numeric' });
+  prevBtn.disabled = state.month <= firstMonth;
+  nextBtn.disabled = state.month >= lastMonth;
   if (state.view === 'month') renderMonth();
   else renderAgenda();
 }
@@ -112,8 +118,9 @@ async function load() {
     panel.innerHTML = '<div class="skeleton skeleton--block cal-skeleton"></div>';
     try {
       const start = gridStart(state.month);
-      const { events } = await getEvents(start, addDays(start, 42));
+      const { events, msaError } = await getEvents(start, addDays(start, 42));
       monthCache.set(key, events);
+      msaNote.hidden = !msaError;
     } catch (err) {
       if (token !== loadToken) return;
       panel.removeAttribute('aria-busy');
@@ -175,14 +182,17 @@ function setView(view, focus = false) {
 }
 
 function shiftMonth(delta) {
-  state.month = new Date(state.month.getFullYear(), state.month.getMonth() + delta, 1);
+  state.month = clampMonth(new Date(state.month.getFullYear(), state.month.getMonth() + delta, 1));
   load();
 }
 
-document.querySelector('[data-cal-prev]').addEventListener('click', () => shiftMonth(-1));
-document.querySelector('[data-cal-next]').addEventListener('click', () => shiftMonth(1));
+const prevBtn = document.querySelector('[data-cal-prev]');
+const nextBtn = document.querySelector('[data-cal-next]');
+const msaNote = document.querySelector('[data-msa-error]');
+prevBtn.addEventListener('click', () => shiftMonth(-1));
+nextBtn.addEventListener('click', () => shiftMonth(1));
 document.querySelector('[data-cal-today]').addEventListener('click', () => {
-  state.month = new Date(today.getFullYear(), today.getMonth(), 1);
+  state.month = clampMonth(new Date(today.getFullYear(), today.getMonth(), 1));
   load();
 });
 tabs.forEach((tab, i) => {

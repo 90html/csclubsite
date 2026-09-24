@@ -11,6 +11,8 @@ export const TYPE_COLORS = {
   workshop: 'var(--c-workshop)',
   social: 'var(--c-social)',
   other: 'var(--c-other)',
+  msa: 'var(--c-msa)',
+  school: 'var(--c-school)',
 };
 
 const tzLabel = () => {

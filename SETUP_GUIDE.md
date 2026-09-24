@@ -122,11 +122,11 @@ When all seven are done, click **Publish** and check each page on the live site,
 
 | # | What | Where it goes |
 |---|---|---|
-| 1 | **Google Calendar ID** (Calendar settings → Integrate calendar) with the calendar set to public, plus a **Calendar API key** restricted to your site's domain (README → Calendar). Until then, the calendar shows the regular every-other-Monday schedule. | `config.js` → `CALENDAR.CALENDAR_ID`, `CALENDAR.CALENDAR_API_KEY` |
-| 2 | **Check the points sheet on the live site.** Its link is already set. If the columns don't come out right, tell me the header names. ⚠️ Published sheets are **public**, so use first name + last initial. | `config.js` → `POINTS.COLUMNS` |
-| 3 | **Point values** for a meeting, a problem and a contest | `config.js` → `POINTS.POINT_VALUES` |
-| 4 | **Meeting room**, and how long meetings last (60 minutes is assumed) | `config.js` → `MEETING.room`, `MEETING.SCHEDULE.durationMinutes`, `MEETING.endTime24` |
-| 5 | **Slide links** after each meeting, plus optional cover images. Delete the sample entries once real meetings are in. | `data/slides.json` |
-| 6 | *Optional:* club photos, officer photos, social links | `assets/images/originals/` + `npm run images`, `data/officers.json` → `photo`, `config.js` → `SOCIAL` |
+| 1 | **Restrict the Calendar API key** in Google Cloud to `https://90html.github.io/*` (README → Calendar). It's in the public code, so this matters. | Google Cloud Console |
+| 2 | **Slide link** for the 9/21 meeting, then links (and optional titles) after each meeting | `data/slides.json` |
+| 3 | **New points sheet** when it's ready (published as CSV). ⚠️ Published sheets are **public**. | `config.js` → `POINTS.POINTS_SHEET_URL` |
+| 4 | **Coach Garrett's room**, when you want it shown | `data/officers.json` → `room` |
+| 5 | *Optional:* club photos, officer photos, social links (Instagram and Discord are mentioned in the points rules) | `assets/images/originals/` + `npm run images`, `data/officers.json`, `config.js` → `SOCIAL` |
+| 6 | **Next school year:** a new FBISD calendar | `data/school-calendar.json`, `CALENDAR.RANGE` |
 
-Add `?setup` to any page URL to see which of these are still missing.
+Add `?setup` to any page URL to see which settings are still empty.

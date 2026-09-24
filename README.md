@@ -18,54 +18,50 @@ A fast, dark-themed static website for the Dulles High School CS Club. It uses p
 
 | I want to… | Edit this |
 |---|---|
-| Change email, meeting time, calendar, points sheet, point values, socials | `config.js` (every setting is commented) |
+| Change email, meeting schedule/room, calendar, points, socials | `config.js` (every setting is commented) |
+| Update school holidays for a new year | `data/school-calendar.json` |
 | Add a meeting's slides | `data/slides.json` |
 | Change officers next year | `data/officers.json` |
 | Add photos | `assets/images/originals/`, then run `npm run images` |
 
 **Tip:** add `?setup` to any page's URL (for example `…/points/?setup`) to see a checklist of the placeholders that are still unfilled.
 
-While a setting is still a placeholder (`PASTE_…`), the site keeps working. The Calendar and Points pages show clearly labelled **DEMO** data, and unfilled facts such as the meeting time are simply hidden.
+While a setting is empty or a placeholder (`PASTE_…`), the site keeps working and simply hides that piece. For example, the Points leaderboard shows "coming soon" until a sheet is connected.
 
 ---
 
-## 1. Points: publish the Google Sheet
+## 1. Points
 
-1. Open the points spreadsheet. Row 1 should hold headers such as **Name, Meetings, Problems, Contests, Total**. Total is optional: if it's missing, the site adds the other columns together.
-2. Click **File → Share → Publish to web**.
-3. Under **Link**, choose the tab with the points (not "Entire document"), then choose **Comma-separated values (.csv)**.
-4. Click **Publish**, confirm, and copy the link. It looks like `https://docs.google.com/spreadsheets/d/e/2PACX-…/pub?gid=0&single=true&output=csv`.
-5. Paste it into `config.js` as `POINTS_SHEET_URL`.
-6. If your headers are named differently, change `POINTS.COLUMNS`. The site also tries to auto-detect common names ("Student", "Attendance", "Solved", "Score").
-7. **One column per meeting date?** List them in `POINTS.COLUMN_GROUPS`, for example `meetings: ['9/*', '10/*']`, and they're added together.
-8. Set the point values in `POINTS.POINT_VALUES`. These are shown in "How points work".
+The points rules ("How points work": the 7-point EOS goal and the ways to earn) live in `points/index.html`. Edit that text directly. The goal number is `POINTS.EOS_GOAL` in `config.js`.
 
-Edits to the sheet appear on the site within about 5 minutes (Google caches published sheets). The page also auto-refreshes.
+The **leaderboard is off for now** (last year's sheet was disconnected), so the page shows "coming soon". To turn it on with a new sheet:
 
-> ⚠️ **Privacy:** anything you publish to the web is **public**. Anyone with the link can see the whole sheet. Use **first name + last initial** (e.g. "Ava M."), and never put student IDs, emails, grades or other personal information in the published tab. The website itself never logs or sends searched names anywhere, and has no analytics.
+1. In the spreadsheet, row 1 should hold headers such as **Name, Meetings, Problems, Contests, Total**. Total is optional: if it's missing, the other columns are added together.
+2. Click **File → Share → Publish to web**, choose the points tab and **Comma-separated values (.csv)**, click **Publish**, and copy the link.
+3. Paste it into `config.js` as `POINTS.POINTS_SHEET_URL`. The `pubhtml` embed link works too.
+4. If your headers are named differently, change `POINTS.COLUMNS`. For one column per meeting date, use `POINTS.COLUMN_GROUPS`.
 
-## 2. Calendar: make it public and get an API key
+> ⚠️ **Privacy:** a published sheet is **public**. Use **first name + last initial**, and never publish IDs, emails or grades. The site never logs or sends searched names anywhere.
 
-The site reads your Google Calendar with the Calendar API. It doesn't use Google's iframe, and Google's ICS feed can't be read by browsers directly.
+## 2. Calendar
 
-**Make the calendar public**
-1. In Google Calendar, click **⚙ Settings**, then pick your club calendar under **Settings for my calendars**.
-2. Under **Access permissions for events**, tick **Make available to public** and choose **See all event details**.
-3. Scroll to **Integrate calendar** and copy the **Calendar ID** (for example `abc123@group.calendar.google.com`). Paste it into `config.js` as `CALENDAR_ID`.
+The Calendar page, the "Next meeting" countdown and the Home "Next up" strip combine three things:
 
-**Create a free API key**
-1. Go to <https://console.cloud.google.com/> and create a project (for example "DHS CS Club site").
-2. Open **APIs & Services → Library**, search **Google Calendar API** and click **Enable**.
-3. Open **APIs & Services → Credentials → Create credentials → API key**.
-4. Click the new key to restrict it:
-   - **Application restrictions → Websites.** Add every address the site runs on, for example:
-     `https://90html.github.io/*`, your custom domain `https://yourdomain.org/*`, `https://dhscompsci.weebly.com/*` (only if you use the Weebly embeds), and `http://localhost:8080/*` for testing.
-   - **API restrictions → Restrict key → Google Calendar API.**
-5. Paste the key into `config.js` as `CALENDAR_API_KEY`.
+| Source | Where it's set |
+|---|---|
+| **Club meetings:** every other Monday, 3:00–3:45 PM, Room B105 | `config.js` → `MEETING` and `MEETING.SCHEDULE` |
+| **School calendar:** FBISD holidays, breaks, exams | `data/school-calendar.json` (**update every school year**) |
+| **MSA events:** MSA meetings and socials | the MSA master calendar (`CALENDAR.MSA_CALENDAR_ID`) |
 
-A browser API key is visible to visitors by design. The website restriction is what stops anyone else from using it, and it can only read public calendars.
+**Meeting rules:** a club meeting that lands on a no-school day, or on a day with an MSA meeting or social, moves to the next Monday. If that Monday is blocked too (or is already a meeting), it's canceled and shown as "No club meeting". Other clubs' events on the MSA calendar are ignored (`CALENDAR.MSA_IGNORE`). Only August 2026 to May 2027 can be viewed (`CALENDAR.RANGE`).
 
-**Event colors** come from keywords in the event title (Meeting, Contest, Workshop, Social). You can change them in `CALENDAR.EVENT_TYPES`.
+**To change the schedule:** edit `MEETING.SCHEDULE.firstMeeting` (any meeting date in the pattern) and `everyWeeks`. Add one-off meetings to `extraMeetings`.
+
+**API key:** the key in `CALENDAR.CALENDAR_API_KEY` is a browser key, so anyone can see it in the page source. Lock it down in Google Cloud Console → **APIs & Services → Credentials** → the key:
+- **Application restrictions → Websites:** add `https://90html.github.io/*` (plus your custom domain and `http://localhost:8080/*` for testing).
+- **API restrictions → Restrict key → Google Calendar API.**
+
+**If the club makes its own Google Calendar later:** make it public, then paste its Calendar ID (Calendar settings → Integrate calendar) into `CALENDAR.CALENDAR_ID`. Club events then come from it instead of the schedule, with colors picked by keywords in `CALENDAR.EVENT_TYPES`.
 
 ## 3. Slides: add a meeting
 
@@ -73,9 +69,9 @@ Open `data/slides.json` and add one object to the `slides` list:
 
 ```json
 {
-  "id": "2026-10-08-recursion",
+  "id": "2026-10-19",
   "title": "Recursion",
-  "date": "2026-10-08",
+  "date": "2026-10-19",
   "tags": ["Java", "Intermediate"],
   "description": "Functions that call themselves, plus classic contest problems.",
   "coverImage": "",
@@ -84,11 +80,11 @@ Open `data/slides.json` and add one object to the `slides` list:
 }
 ```
 
+- `title`, `tags` and `description` are optional. An untitled card shows "Club Meeting".
 - **Before the meeting:** leave `slidesUrl` empty. The card shows **"Available after the meeting"** with a lock.
 - **After the meeting:** paste the link to the Google Slides deck (**Share → Anyone with the link → Viewer**) into `slidesUrl`. The card unlocks by itself.
 - The unlock time is the meeting `date` at `MEETING.endTime24` (in `MEETING.timezone`). Set `availableFrom` (e.g. `"2026-10-08T17:30:00-05:00"`) to override it.
 - **Cover image (optional):** without one, the site generates a cover. To use your own, put an image in `assets/slides/originals/`, run `npm run images`, then set `"coverImage": "assets/slides/<file-name>.webp"`.
-- Entries marked `"placeholder": true` are **sample cards**. Delete them once real meetings are in.
 
 Watch the commas: every object except the last one in the list needs a `,` after its `}`.
 

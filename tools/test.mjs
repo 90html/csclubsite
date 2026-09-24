@@ -14,11 +14,20 @@ const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), '..');
 const PORT = 8123;
 const BASE = `http://localhost:${PORT}`;
 const PAGES = ['/', '/getting-started/', '/slides/', '/calendar/', '/points/', '/officers/', '/contact/', '/404.html'];
-// Stand-in for the published Google Sheet (docs.google.com isn't reachable from CI/sandboxes).
-const MOCK_SHEET = 'Name,Meetings,Problems,Contests,Total\n"Kavish M.",5,12,10,27\n"Arnav D.",4,9,5,18\n"Ahaan T.",5,7,5,17\nTest Student,1,0,0,1\n';
+// Stand-ins for Google (docs.google.com / googleapis.com aren't reachable from CI/sandboxes).
+// The points sheet is disconnected by default; tests that need it set a URL + serve this CSV.
+const MOCK_SHEET = 'Name,Meetings,Problems,Contests,Total\n"Ava M.",5,12,10,27\n"Liam C.",4,9,5,18\n"Isabella G.",5,7,5,17\n"Noah J.",1,0,0,1\n';
 const sheetRoute = (r) => r.fulfill({ contentType: 'text/csv', body: MOCK_SHEET, headers: { 'access-control-allow-origin': '*' } });
-const DEMO_POINTS = "CONFIG.POINTS.POINTS_SHEET_URL = 'PASTE_PUBLISHED_GOOGLE_SHEET_CSV_URL_HERE';";
-const DEMO_CALENDAR = 'CONFIG.MEETING.SCHEDULE = null;';
+const WITH_SHEET = "CONFIG.POINTS.POINTS_SHEET_URL = 'https://docs.google.com/spreadsheets/d/e/TEST/pub?output=csv';";
+// A few real events from the MSA master calendar (other clubs' events must be ignored).
+const MSA_ITEMS = [
+  { id: 'm1', summary: 'MSA Monthly Meeting', start: { date: '2026-10-05' }, end: { date: '2026-10-06' } },
+  { id: 'm2', summary: 'MSA Monthly Meeting', start: { date: '2026-11-09' }, end: { date: '2026-11-10' } },
+  { id: 'm3', summary: 'Halloween Social', description: 'Costumes! Details: https://example.com/halloween', start: { date: '2026-10-22' }, end: { date: '2026-10-23' } },
+  { id: 'm4', summary: 'Digital Design Club: Session 1', start: { dateTime: '2026-10-23T15:00:00-05:00' }, end: { dateTime: '2026-10-23T16:00:00-05:00' } },
+  { id: 'm5', summary: 'No School', start: { date: '2026-10-09' }, end: { date: '2026-10-10' } },
+];
+const msaRoute = (r) => r.fulfill({ contentType: 'application/json', headers: { 'access-control-allow-origin': '*' }, body: JSON.stringify({ items: MSA_ITEMS }) });
 
 let failures = 0;
 const ok = (cond, msg) => {
@@ -62,7 +71,9 @@ async function open(path, { width = 1280, height = 900, config, time, routes = {
     const base = await readFile(join(ROOT, 'config.js'), 'utf8');
     await page.route('**/config.js', (r) => r.fulfill({ contentType: 'text/javascript', body: `${base}\n${config}` }));
   }
-  await page.route('https://docs.google.com/**', sheetRoute); // tests can override (later routes win)
+  // Defaults; tests can override (later routes win).
+  await page.route('https://docs.google.com/**', sheetRoute);
+  await page.route('https://www.googleapis.com/**', msaRoute);
   for (const [pattern, handler] of Object.entries(routes)) await page.route(pattern, handler);
   await page.goto(BASE + path, { waitUntil: 'networkidle' });
   return { page, ctx, errors };
@@ -71,150 +82,132 @@ async function open(path, { width = 1280, height = 900, config, time, routes = {
 console.log('\nPages × widths (console errors, horizontal overflow)');
 for (const width of [360, 768, 1440, 2560]) {
   for (const path of PAGES) {
-    const { page, ctx, errors } = await open(path, { width });
+    const { page, ctx, errors } = await open(path, { width, time: '2026-09-24T15:00:00Z' });
     const overflow = await page.evaluate(() => document.documentElement.scrollWidth - window.innerWidth);
     ok(!errors.length && overflow <= 0, `${width}px ${path}${errors.length ? ` errors: ${errors.join(' | ')}` : ''}${overflow > 0 ? ` overflow ${overflow}px` : ''}`);
     await ctx.close();
   }
 }
 
-console.log('\nPoints (configured sheet, mocked)');
+console.log('\nPoints (no sheet connected)');
 {
-  const { page, ctx, errors } = await open('/points/');
-  ok(await page.locator('[data-demo-banner]').isHidden(), 'No demo banner with the real sheet URL');
-  ok((await page.locator('.board tbody tr').count()) === 4, 'Rows loaded from the sheet');
-  await page.fill('#points-q', 'kavish');
-  await page.locator('#points-q').press('Enter');
-  await page.waitForTimeout(1300);
-  ok((await page.locator('.result__total-num').innerText()) === '27', 'Lookup from sheet data');
+  let sheetRequests = 0;
+  const { page, ctx, errors } = await open('/points/', { routes: { 'https://docs.google.com/**': (r) => (sheetRequests++, sheetRoute(r)) } });
+  ok(await page.locator('[data-points-soon]').isVisible(), '"Coming soon" shown');
+  ok(await page.locator('[data-points-live]').first().isHidden() && (await page.locator('.board tbody tr').count()) === 0, 'No search, no leaderboard, no names');
+  ok(sheetRequests === 0, 'No request to Google Sheets');
+  ok((await page.locator('.rule').count()) === 7 && (await page.locator('.goal-card').innerText()).includes('7'), 'Rules + 7-point EOS goal shown');
   ok(!errors.length, 'No console errors');
   await ctx.close();
 }
-
-console.log('\nPoints (demo data)');
 {
-  const { page, ctx } = await open('/points/', { config: DEMO_POINTS });
+  const { page, ctx } = await open('/');
+  ok(await page.locator('[data-teaser-soon]').isVisible() && (await page.locator('[data-teaser-live]').isHidden()), 'Home teaser links to "How points work"');
+  await ctx.close();
+}
+
+console.log('\nPoints (sheet connected, mocked)');
+{
+  const { page, ctx, errors } = await open('/points/', { config: WITH_SHEET });
+  ok((await page.locator('.board tbody tr').count()) === 4, 'Rows loaded from the sheet');
   const input = page.locator('#points-q');
-  for (const [q, expect] of [['kowal', 'Ella Kowalski'], ['kowalski ella', 'Ella Kowalski'], ['elaa kowalsky', 'Ella Kowalski'], ['garcia', 'Isabella García']]) {
+  for (const [q, expect] of [['isab', 'Isabella G.'], ['g isabella', 'Isabella G.'], ['isabela', 'Isabella G.'], ['liam', 'Liam C.']]) {
     await input.fill(q);
     const firstOpt = await page.locator('#points-listbox [role="option"]').first().innerText();
     ok(firstOpt.includes(expect), `dropdown "${q}" → ${expect}`);
   }
-  await input.fill('kowalski ella');
+  await input.fill('ava');
   await input.press('Enter');
   await page.waitForTimeout(1300);
-  ok((await page.locator('.result__name').innerText()) === 'Ella Kowalski', 'Enter selects the top match');
-  ok((await page.locator('.result__total-num').innerText()) === '64', 'Count-up finishes on the total');
-  ok(/#1 of 48/i.test(await page.locator('.result__rank').innerText()), 'Rank "#1 of 48" shown');
+  ok((await page.locator('.result__name').innerText()) === 'Ava M.', 'Enter selects the top match');
+  ok((await page.locator('.result__total-num').innerText()) === '27', 'Count-up finishes on the total');
+  ok(/#1 of 4/i.test(await page.locator('.result__rank').innerText()), 'Rank shown');
+  ok((await page.locator('.result').innerText()).includes('7-point goal'), 'EOS goal reached message');
   ok(await page.locator('tr.is-me').count() === 1, 'Selected person highlighted in leaderboard');
-  await input.fill('Jack Wilson');
+  await input.fill('Noah J.');
   await input.press('Enter');
-  ok((await page.locator('.result__next').innerText()).includes('to reach #4'), '"Points to next rank" shown');
+  ok((await page.locator('.result').innerText()).includes('6 more to reach the 7-point'), 'Points left to the EOS goal');
   await input.fill('zzzzqx');
   await input.press('Enter');
   ok(await page.locator('.no-results').count() === 1, 'No-results state');
   await page.locator('[data-sort="total"]').click();
   ok((await page.locator('th[aria-sort]').getAttribute('aria-sort')) === 'descending', 'Sort by total');
-  await page.locator('[data-page="1"]').click();
-  ok((await page.locator('.pager span').first().innerText()).startsWith('Showing 26'), 'Pagination');
+  ok(!errors.length, 'No console errors');
   await ctx.close();
 }
 {
-  const { page, ctx } = await open('/points/#q=isabela', { config: DEMO_POINTS });
+  const { page, ctx } = await open('/points/#q=isabela', { config: WITH_SHEET });
   await page.waitForTimeout(300);
-  ok((await page.locator('.result__name').innerText()) === 'Isabella García', 'Home teaser hash prefill (with typo)');
+  ok((await page.locator('.result__name').innerText()) === 'Isabella G.', 'Home teaser hash prefill (with typo)');
   ok(!page.url().includes('#'), 'Name is removed from the URL');
   await ctx.close();
 }
-
-console.log('\nPoints (real CSV with messy data + column groups)');
 {
   const csv = 'Club Points,,,,,\nName,9/3,9/10,Problems,Contest A,Contest B\n"Doe, Jane",1,1,4,10,\n  Bob Smith ,1,,2,,5\n,,,,,\nAverage,1,1,3,10,5\n';
-  const config = `CONFIG.POINTS.POINTS_SHEET_URL = 'https://docs.google.com/spreadsheets/d/e/TEST/pub?output=csv';
-CONFIG.POINTS.COLUMN_GROUPS = { meetings: ['9/*'], problems: [], contests: ['Contest *'] };`;
+  const config = `${WITH_SHEET}\nCONFIG.POINTS.COLUMN_GROUPS = { meetings: ['9/*'], problems: [], contests: ['Contest *'] };`;
   const { page, ctx, errors } = await open('/points/', {
     config,
     routes: { 'https://docs.google.com/**': (r) => r.fulfill({ contentType: 'text/csv', body: csv, headers: { 'access-control-allow-origin': '*' } }) },
   });
   const rowsText = await page.locator('.board tbody').innerText();
-  ok(rowsText.includes('Doe, Jane') && rowsText.includes('Bob Smith') && !rowsText.includes('Average'), 'Header row found, junk rows skipped');
+  ok(rowsText.includes('Doe, Jane') && rowsText.includes('Bob Smith') && !rowsText.includes('Average'), 'Messy CSV: header row found, junk rows skipped');
   ok(/Doe, Jane[\s\S]*\b2\b[\s\S]*\b4\b[\s\S]*\b10\b[\s\S]*\b16\b/.test(rowsText), 'Column groups summed; Total computed (2+4+10=16)');
-  ok(await page.locator('[data-demo-banner]').isHidden(), 'Demo banner hidden with a real sheet');
   ok(!errors.length, 'No console errors');
   await ctx.close();
 }
 {
   const { page, ctx } = await open('/points/', {
-    config: "CONFIG.POINTS.POINTS_SHEET_URL = 'https://docs.google.com/spreadsheets/d/e/BROKEN/pub?output=csv';",
+    config: WITH_SHEET,
     routes: { 'https://docs.google.com/**': (r) => r.fulfill({ status: 404, body: 'nope', headers: { 'access-control-allow-origin': '*' } }) },
   });
   ok(await page.locator('[data-board] .state--error').count() === 1, 'Sheet error state with retry');
   await ctx.close();
 }
 
-console.log('\nSlides lock/unlock (sample entry dated 2026-10-05, unlocks 17:00 America/Chicago)');
+console.log('\nSlides lock/unlock (9/28 meeting unlocks 4:00 PM America/Chicago)');
+const sep28 = (page) => page.locator('.slide-card', { hasText: 'Sep 28, 2026' });
 for (const [time, expected] of [
-  ['2026-10-05T21:59:00Z', 'upcoming'],
-  ['2026-10-05T22:01:00Z', 'pending'],
+  ['2026-09-28T20:59:00Z', 'upcoming'],
+  ['2026-09-28T21:01:00Z', 'pending'],
 ]) {
   const { page, ctx } = await open('/slides/', { time });
-  const cls = await page.locator('.slide-card', { hasText: 'Loops & Arrays' }).getAttribute('class');
-  ok(cls.includes(`slide-card--${expected}`), `${time} → ${expected}`);
+  ok((await sep28(page).getAttribute('class')).includes(`slide-card--${expected}`), `${time} → ${expected}`);
   await ctx.close();
 }
 {
   const { page, ctx } = await open('/slides/', {
-    time: '2026-10-06T12:00:00Z',
+    time: '2026-09-29T12:00:00Z',
     routes: {
       '**/data/slides.json': async (r) => {
         const json = JSON.parse(await readFile(join(ROOT, 'data/slides.json'), 'utf8'));
-        json.slides.find((s) => s.id === '2026-10-05-loops-arrays').slidesUrl = 'https://example.com/slides';
+        json.slides.find((s) => s.date === '2026-09-28').slidesUrl = 'https://example.com/slides';
         await r.fulfill({ contentType: 'application/json', body: JSON.stringify(json) });
       },
     },
   });
-  const card = page.locator('.slide-card', { hasText: 'Loops & Arrays' });
+  const card = sep28(page);
   ok((await card.getAttribute('class')).includes('slide-card--open'), 'Link added after the meeting → open');
   ok(await card.locator('.badge--accent').count() === 1, '"Latest" badge on newest open card');
-  await page.locator('.chip', { hasText: 'UIL' }).click();
-  ok(await page.locator('.slide-grid .slide-card').count() === 1, 'Topic filter');
-  await page.locator('.chip', { hasText: 'All topics' }).click();
+  ok((await card.locator('.slide-card__title').innerText()) === 'Club Meeting', 'Untitled meeting shows "Club Meeting"');
   await page.fill('#slide-q', 'nothing-matches');
   await page.waitForTimeout(200);
   ok(await page.locator('.slide-grid .state').count() === 1, 'Search empty state');
   await ctx.close();
 }
 
-console.log('\nCalendar (regular schedule from config.js)');
+console.log('\nCalendar (schedule + FBISD + MSA)');
 {
-  const { page, ctx } = await open('/calendar/', { time: '2026-09-23T15:00:00Z' });
+  const { page, ctx, errors } = await open('/calendar/', { time: '2026-09-24T15:00:00Z' });
   ok(await page.locator('.demo-banner--info').isVisible(), 'Schedule notice shown');
   ok((await page.locator('.next-card h2').innerText()) === 'Club Meeting', 'Next meeting title');
-  ok((await page.locator('.next-card').innerText()).includes('Mon, Oct 5'), 'Next meeting is Mon Oct 5 (every other Monday from 9/21)');
-  const sepDays = await page.locator('.day:not(.day--out) .pill').count();
-  ok(sepDays === 1, 'September shows only the 9/21 meeting (nothing invented before it)');
-  await page.locator('[data-cal-next]').click();
-  const oct = await page.locator('.day:not(.day--out)').filter({ has: page.locator('.pill') }).allInnerTexts();
-  ok(oct.length === 2 && oct[0].startsWith('5') && oct[1].startsWith('19'), 'October: 5th and 19th');
-  await ctx.close();
-}
-{
-  const { page, ctx } = await open('/', { time: '2026-09-23T15:00:00Z' });
-  ok((await page.locator('[data-upcoming]').innerText()).includes('Mon, Oct 5'), 'Home countdown targets Mon Oct 5');
-  ok(await page.locator('[data-upcoming] .badge--demo').count() === 0, 'No DEMO badge in schedule mode');
-  await ctx.close();
-}
-
-console.log('\nCalendar (demo data)');
-{
-  const { page, ctx } = await open('/calendar/', { time: '2026-09-23T15:00:00Z', config: DEMO_CALENDAR });
-  ok((await page.locator('[data-cal-title]').innerText()) === 'September 2026', 'Month title');
-  ok(await page.locator('.day--today').count() === 1, 'Today highlighted');
-  ok(await page.locator('.next-card .countdown').count() === 1, 'Next meeting countdown');
-  await page.locator('.pill').first().click();
+  ok((await page.locator('.next-card').innerText()).includes('Mon, Sep 28'), 'Next meeting is Mon Sep 28');
+  const sep = await page.locator('.day:not(.day--out)').filter({ has: page.locator('.pill[data-type="meeting"]') }).allInnerTexts();
+  ok(sep.length === 2 && sep[0].startsWith('21') && sep[1].startsWith('28'), 'September meetings: 21st and 28th');
+  ok(await page.locator('.day:not(.day--out) .pill[data-type="school"]').count() === 2, 'FBISD days shown (Labor Day, 9/25)');
+  await page.locator('.day:not(.day--out) .pill[data-type="meeting"]').last().click();
   ok(await page.locator('dialog.modal[open]').count() === 1, 'Event modal opens');
+  ok((await page.locator('dialog.modal').innerText()).includes('Room B105'), 'Room shown');
   ok((await page.locator('dialog.modal a', { hasText: 'Add to Google Calendar' }).getAttribute('href')).startsWith('https://calendar.google.com/'), 'Add to Google Calendar link');
-  ok(await page.locator('dialog.modal .event-detail__desc a[href^="https://codingbat.com"]').count() === 1, 'Description links made clickable');
   const download = page.waitForEvent('download');
   await page.locator('[data-ics]').click();
   ok((await download).suggestedFilename().endsWith('.ics'), '.ics download');
@@ -222,49 +215,63 @@ console.log('\nCalendar (demo data)');
   await page.locator('dialog.modal').waitFor({ state: 'detached', timeout: 2000 }).catch(() => {});
   ok(await page.locator('dialog.modal').count() === 0, 'Escape closes the modal');
   ok(await page.evaluate(() => document.activeElement.classList.contains('pill')), 'Focus returns to the event');
+
+  await page.locator('[data-cal-next]').click();
+  const oct = page.locator('.day:not(.day--out)');
+  const octMeetings = await oct.filter({ has: page.locator('.pill[data-type="meeting"]') }).allInnerTexts();
+  ok(octMeetings.length === 2 && octMeetings[0].startsWith('19') && octMeetings[1].startsWith('26'), 'October: 10/12 (fall break) moved to 10/19; 10/26 regular');
+  ok(await oct.locator('.pill[data-type="msa"]').count() === 1 && (await oct.locator('.pill[data-type="social"]').count()) === 1, 'MSA meeting + Halloween Social shown');
+  ok((await page.locator('.cal-shell').innerText()).includes('Digital Design') === false, 'Other clubs ignored');
+  await oct.filter({ has: page.locator('.pill[data-type="meeting"]') }).first().locator('.pill[data-type="meeting"]').click();
+  ok((await page.locator('dialog.modal').innerText()).includes('Moved from Mon, Oct 12 (Fall Break)'), 'Moved meeting explains why');
+  await page.keyboard.press('Escape');
+  await oct.locator('.pill[data-type="social"]').click();
+  ok(await page.locator('dialog.modal .event-detail__desc a[href="https://example.com/halloween"]').count() === 1, 'Description links made clickable');
+  await page.keyboard.press('Escape');
+
+  await page.locator('[data-cal-next]').click();
+  const nov = await page.locator('.day:not(.day--out)').filter({ has: page.locator('.pill[data-type="meeting"]') }).allInnerTexts();
+  ok(nov.length === 2 && nov[0].startsWith('16') && nov[1].startsWith('30'), 'November: MSA 11/9 → 11/16, Thanksgiving 11/23 → 11/30');
+  await page.locator('[data-cal-next]').click();
+  ok((await page.locator('.cal-shell').innerText()).includes('No club meeting'), 'December: winter-break meeting shown as canceled');
+
   await page.locator('#tab-agenda').click();
   ok(await page.locator('.agenda-item').count() > 0, 'Agenda view');
   await page.locator('#tab-agenda').press('ArrowLeft');
   ok((await page.locator('#tab-month').getAttribute('aria-selected')) === 'true', 'Tabs: arrow-key navigation');
-  await page.locator('[data-cal-next]').click();
-  ok((await page.locator('[data-cal-title]').innerText()) === 'October 2026', 'Next month');
+  for (let i = 0; i < 8; i++) await page.locator('[data-cal-next]').click({ force: true });
+  ok((await page.locator('[data-cal-title]').innerText()) === 'May 2027' && (await page.locator('[data-cal-next]').isDisabled()), 'Stops at May 2027');
+  await page.locator('[data-cal-today]').click();
+  for (let i = 0; i < 3; i++) await page.locator('[data-cal-prev]').click({ force: true });
+  ok((await page.locator('[data-cal-title]').innerText()) === 'August 2026' && (await page.locator('[data-cal-prev]').isDisabled()), 'Starts at August 2026');
+  ok(!errors.length, 'No console errors');
   await ctx.close();
 }
 {
-  const { page, ctx } = await open('/calendar/', { width: 390, config: DEMO_CALENDAR });
+  const { page, ctx } = await open('/', { time: '2026-09-24T15:00:00Z' });
+  ok((await page.locator('[data-upcoming]').innerText()).includes('Mon, Sep 28'), 'Home countdown targets Mon Sep 28');
+  await ctx.close();
+}
+{
+  const { page, ctx } = await open('/calendar/', { width: 390, time: '2026-09-24T15:00:00Z' });
   ok((await page.locator('#tab-agenda').getAttribute('aria-selected')) === 'true', 'Mobile defaults to agenda');
   await ctx.close();
 }
 {
   const { page, ctx } = await open('/calendar/', {
-    config: "CONFIG.CALENDAR.CALENDAR_ID = 'x@group.calendar.google.com'; CONFIG.CALENDAR.CALENDAR_API_KEY = 'bad';",
+    time: '2026-09-24T15:00:00Z',
     routes: { 'https://www.googleapis.com/**': (r) => r.fulfill({ status: 403, body: '{}', headers: { 'access-control-allow-origin': '*' } }) },
   });
-  ok(await page.locator('.cal-shell .state--error [data-retry]').count() === 1, 'API error state with retry');
-  ok(await page.locator('[data-demo-banner]').isHidden(), 'No notice once Google Calendar is configured');
+  ok(await page.locator('[data-msa-error]').isVisible(), 'MSA calendar failure: notice shown');
+  ok((await page.locator('.next-card h2').innerText()) === 'Club Meeting', 'Meetings still shown without MSA data');
   await ctx.close();
 }
 {
-  const item = (id, summary, start, end) => ({ id, summary, status: 'confirmed', start, end });
   const { page, ctx } = await open('/calendar/', {
-    time: '2026-09-23T15:00:00Z',
-    config: "CONFIG.CALENDAR.CALENDAR_ID = 'x@group.calendar.google.com'; CONFIG.CALENDAR.CALENDAR_API_KEY = 'key';",
-    routes: {
-      'https://www.googleapis.com/**': (r) =>
-        r.fulfill({
-          contentType: 'application/json',
-          headers: { 'access-control-allow-origin': '*' },
-          body: JSON.stringify({
-            items: [
-              item('a', 'UIL District Contest', { date: '2026-09-28' }, { date: '2026-09-30' }),
-              item('b', 'Weekly Meeting', { dateTime: '2026-09-24T16:15:00-05:00' }, { dateTime: '2026-09-24T17:15:00-05:00' }),
-            ],
-          }),
-        }),
-    },
+    config: "CONFIG.CALENDAR.CALENDAR_ID = 'club@group.calendar.google.com';",
+    routes: { 'https://www.googleapis.com/**': (r) => r.fulfill({ status: 403, body: '{}', headers: { 'access-control-allow-origin': '*' } }) },
   });
-  ok(await page.locator('.pill[data-type="contest"]').count() === 2, 'Multi-day all-day event spans 2 days, typed "contest"');
-  ok((await page.locator('.next-card h2').innerText()) === 'Weekly Meeting', 'Next meeting from API data');
+  ok(await page.locator('.cal-shell .state--error [data-retry]').count() === 1, 'Club calendar error state with retry');
   await ctx.close();
 }
 
@@ -284,7 +291,10 @@ console.log('\nNav, contact, officers');
   ok((await page.locator('.copy-email__addr').innerText()) === 'dullescomputerscience@gmail.com', 'Club email shown');
   ok((await page.locator('a[data-club-email]').first().getAttribute('href')) === 'mailto:dullescomputerscience@gmail.com', 'mailto link');
   ok((await page.locator('[data-remind]').innerText()).includes('@dhscs27'), 'Remind @dhscs27 shown');
-  ok((await page.locator('[data-meeting-group]').innerText()).includes('Every other Monday'), 'Meeting schedule shown');
+  const meet = await page.locator('[data-meeting-group]').innerText();
+  ok(meet.includes('Every other Monday') && meet.includes('3:00') && meet.includes('B105'), 'Meeting schedule, time and room shown');
+  const sponsors = await page.locator('[data-sponsor-list]').innerText();
+  ok(sponsors.includes('Mr. Rogers · Room B105') && sponsors.includes('Coach Garrett') && !sponsors.includes('A-105'), 'Sponsor rooms (no A-105 for now)');
   await ctx.close();
 }
 {
@@ -306,6 +316,7 @@ for (const slug of ['1-home', '5-points', '4-calendar']) {
   const ctx = await browser.newContext({ viewport: { width: 1280, height: 900 } });
   const page = await ctx.newPage();
   await page.route('https://docs.google.com/**', sheetRoute);
+  await page.route('https://www.googleapis.com/**', msaRoute);
   const errors = [];
   page.on('pageerror', (e) => errors.push(e.message));
   page.on('console', (m) => m.type() === 'error' && !/Failed to load resource/.test(m.text()) && errors.push(m.text()));

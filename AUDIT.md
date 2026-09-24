@@ -40,7 +40,7 @@ What that means:
 - The club's identity and mission (rewritten to be punchier and beginner-friendly).
 - The focus on **Java**, **competitive programming**, and **local and UIL contests**.
 - **Practice contests** before contest season.
-- The two faculty sponsors: **Mr. Rogers** (Room B105) and **Coach Garrett** (Room A-105).
+- The two faculty sponsors: **Mr. Rogers** (Room B105) and **Coach Garrett**.
 - Learning resources that are still valid (each URL was checked in September 2026, either by a direct request or against current search results):
   - Oracle JDK downloads, `https://www.oracle.com/java/technologies/downloads/`
   - Apache NetBeans, `https://netbeans.apache.org/front/main/download/`
@@ -55,7 +55,7 @@ What that means:
 
 ## Facts deliberately not invented
 
-The new site does **not** claim member counts, awards, contest results or a founding year. The meeting schedule (every other Monday at 4:00 PM, starting 2026-09-21) was provided by the club. The meeting room is still a placeholder and stays hidden until it's filled in. The school location ("Sugar Land, TX") is inferred from the UIL (Texas) contest focus. It appears only in structured data and the footer, so confirm or change `SCHOOL.location` in `config.js`.
+The new site does **not** claim member counts, awards, contest results or a founding year. The meeting schedule (every other Monday, 3:00–3:45 PM, Room B105), the FBISD 2026–27 school calendar and the MSA master calendar were provided by the club. The school location ("Sugar Land, TX") is inferred from the UIL (Texas) contest focus. It appears only in structured data and the footer, so confirm or change `SCHOOL.location` in `config.js`.
 
 ## Images
 

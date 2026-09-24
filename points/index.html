@@ -82,18 +82,28 @@
     <div class="orb orb--2" aria-hidden="true"></div>
     <div class="container">
       <p class="eyebrow">Points</p>
-      <h1>How many points <span class="grad-text">do you have?</span></h1>
-      <p class="lead">Search your name to see your total, your breakdown and where you rank.</p>
+      <h1>Earn points. <span class="grad-text">Earn pizza.</span></h1>
+      <p class="lead">Show up, compete and solve problems. <strong>7 points a semester</strong> gets you into the end-of-semester party.</p>
     </div>
   </header>
 
-  <section class="section--tight" aria-labelledby="lookup-title">
+  <!-- Shown until a points sheet is connected in config.js -->
+  <section class="section--tight" aria-labelledby="soon-title" data-points-soon>
+    <div class="container">
+      <div class="card card--pad soon-card" data-reveal>
+        <span class="icon-tile"><svg data-icon="trophy" class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M7 4h10v5a5 5 0 0 1-10 0V4Z"/><path d="M7 6H4v1.5A3.5 3.5 0 0 0 7.5 11M17 6h3v1.5a3.5 3.5 0 0 1-3.5 3.5M12 14v3M8.5 20.5h7M9.5 17.5h5v3h-5z"/></svg></span>
+        <div>
+          <h2 id="soon-title">The leaderboard is coming soon</h2>
+          <p>We're setting up this year's points. Once they're in, you'll be able to search your name here and see your total, your breakdown and your rank.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Live lookup + leaderboard (only when a points sheet is connected) -->
+  <section class="section--tight" aria-labelledby="lookup-title" data-points-live hidden>
     <div class="container">
       <h2 class="sr-only" id="lookup-title">Look up your points</h2>
-      <div class="demo-banner demo-banner--spaced" data-demo-banner hidden>
-        <svg data-icon="info" class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><circle cx="12" cy="12" r="9"/><path d="M12 11v5.5M12 7.5v.01"/></svg>
-        <p><strong>DEMO data. These names are fake.</strong> Real points appear once the Google Sheet link is added to <code>config.js</code>.</p>
-      </div>
       <div class="points-search">
         <div class="search-field">
           <svg data-icon="search" class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.8-3.8"/></svg>
@@ -110,7 +120,7 @@
     </div>
   </section>
 
-  <section class="section--tight" aria-labelledby="board-title">
+  <section class="section--tight" aria-labelledby="board-title" data-points-live hidden>
     <div class="container">
       <div class="board-head">
         <h2 id="board-title">Leaderboard</h2>
@@ -118,40 +128,69 @@
         <button type="button" class="btn btn--ghost btn--sm" data-refresh><svg data-icon="refresh" class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M20 11a8 8 0 0 0-14.3-4.9L4 8M4 3.5V8h4.5M4 13a8 8 0 0 0 14.3 4.9L20 16M20 20.5V16h-4.5"/></svg>Refresh</button>
       </div>
       <div data-board aria-busy="true">
-        <div class="podium" aria-hidden="true">
-          <div class="card podium__spot podium__spot--2"><div class="skeleton skeleton--block avatar"></div><div class="skeleton skeleton--line w-80"></div></div>
-          <div class="card podium__spot podium__spot--1"><div class="skeleton skeleton--block avatar"></div><div class="skeleton skeleton--line w-80"></div></div>
-          <div class="card podium__spot podium__spot--3"><div class="skeleton skeleton--block avatar"></div><div class="skeleton skeleton--line w-80"></div></div>
-        </div>
         <div class="table-wrap"><div class="skeleton skeleton--block cal-skeleton"></div></div>
       </div>
     </div>
   </section>
 
-  <section class="section" aria-labelledby="how-title">
+  <section class="section" id="how-points-work" aria-labelledby="how-title">
     <div class="container">
       <div class="section-head">
         <div class="section-head__text" data-reveal>
           <p class="eyebrow">How points work</p>
           <h2 id="how-title">Show up. Solve. Compete.</h2>
-          <p>Every meeting you attend, problem you solve and contest you enter adds to your total.</p>
+          <p>Every meeting, contest and problem counts toward your total.</p>
         </div>
       </div>
-      <div class="explainer">
-        <div class="metric metric--meetings" data-reveal="stagger">
-          <p class="metric__head"><svg data-icon="users" class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><circle cx="9" cy="8" r="3.5"/><path d="M2.5 20a6.5 6.5 0 0 1 13 0"/><path d="M16 4.6a3.5 3.5 0 0 1 0 6.8M21.5 20a6.5 6.5 0 0 0-4-6"/></svg>Meeting attendance</p>
-          <p class="metric__value"><span data-point-value="meeting">X</span><small>pts per meeting</small></p>
-        </div>
-        <div class="metric metric--problems" data-reveal="stagger">
-          <p class="metric__head"><svg data-icon="puzzle" class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M10 3.5a2 2 0 0 1 4 0V5h4a1 1 0 0 1 1 1v4h-1.5a2 2 0 0 0 0 4H19v4a1 1 0 0 1-1 1h-4v-1.5a2 2 0 0 0-4 0V19H6a1 1 0 0 1-1-1v-4h1.5a2 2 0 0 0 0-4H5V6a1 1 0 0 1 1-1h4V3.5Z"/></svg>Problems solved</p>
-          <p class="metric__value"><span data-point-value="problem">X</span><small>pts per problem</small></p>
-        </div>
-        <div class="metric metric--contests" data-reveal="stagger">
-          <p class="metric__head"><svg data-icon="trophy" class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M7 4h10v5a5 5 0 0 1-10 0V4Z"/><path d="M7 6H4v1.5A3.5 3.5 0 0 0 7.5 11M17 6h3v1.5a3.5 3.5 0 0 1-3.5 3.5M12 14v3M8.5 20.5h7M9.5 17.5h5v3h-5z"/></svg>Contests</p>
-          <p class="metric__value"><span data-point-value="contest">X</span><small>pts per contest</small></p>
+
+      <div class="card card--pad goal-card" data-reveal>
+        <p class="goal-card__num"><span class="grad-text" data-eos-goal>7</span><small>points / semester</small></p>
+        <div>
+          <h3>Unlocks the end-of-semester (EOS) party</h3>
+          <p>Hit the goal each semester to get in. We also reward our most devoted members with pizza parties.</p>
         </div>
       </div>
-      <p class="privacy-note"><svg data-icon="info" class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><circle cx="12" cy="12" r="9"/><path d="M12 11v5.5M12 7.5v.01"/></svg><span>Points come straight from the club's Google Sheet and are updated by officers. Your searches stay in your browser and are never saved or sent anywhere. Something look wrong? Tell an officer at the next meeting.</span></p>
+
+      <h3 class="rules-title">Ways to earn</h3>
+      <ul class="rules" role="list">
+        <li class="card rule" data-reveal="stagger">
+          <span class="icon-tile"><svg data-icon="users" class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><circle cx="9" cy="8" r="3.5"/><path d="M2.5 20a6.5 6.5 0 0 1 13 0"/><path d="M16 4.6a3.5 3.5 0 0 1 0 6.8M21.5 20a6.5 6.5 0 0 0-4-6"/></svg></span>
+          <div><h4>Meetings</h4><p>Answer questions at meetings. The more you get right, the more points you earn.</p></div>
+          <span class="rule__pts mono">Varies</span>
+        </li>
+        <li class="card rule" data-reveal="stagger">
+          <span class="icon-tile"><svg data-icon="trophy" class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M7 4h10v5a5 5 0 0 1-10 0V4Z"/><path d="M7 6H4v1.5A3.5 3.5 0 0 0 7.5 11M17 6h3v1.5a3.5 3.5 0 0 1-3.5 3.5M12 14v3M8.5 20.5h7M9.5 17.5h5v3h-5z"/></svg></span>
+          <div><h4>Competitions</h4><p>Compete in contests like UIL invitationals to earn points.</p></div>
+          <span class="rule__pts mono">Varies</span>
+        </li>
+        <li class="card rule" data-reveal="stagger">
+          <span class="icon-tile"><svg data-icon="puzzle" class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M10 3.5a2 2 0 0 1 4 0V5h4a1 1 0 0 1 1 1v4h-1.5a2 2 0 0 0 0 4H19v4a1 1 0 0 1-1 1h-4v-1.5a2 2 0 0 0-4 0V19H6a1 1 0 0 1-1-1v-4h1.5a2 2 0 0 0 0-4H5V6a1 1 0 0 1 1-1h4V3.5Z"/></svg></span>
+          <div><h4>Problem of the Week</h4><p>Solve the POTWs posted in the club Discord server.</p></div>
+          <span class="rule__pts mono">0.5 each · max 2</span>
+        </li>
+        <li class="card rule" data-reveal="stagger">
+          <span class="icon-tile"><svg data-icon="code" class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="m8 7-5 5 5 5M16 7l5 5-5 5M14 4l-4 16"/></svg></span>
+          <div><h4>LeetCode</h4><p>Solve LeetCode problems. Don't just peek at the solution!</p></div>
+          <span class="rule__pts mono">0.5 each · max 1</span>
+        </li>
+        <li class="card rule" data-reveal="stagger">
+          <span class="icon-tile"><svg data-icon="rocket" class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M14.5 4.5c2.5-1.5 5-1.8 6-1 .8 1 .5 3.5-1 6L13 16l-5-5 6.5-6.5Z"/><path d="M8 11 4.5 10l2.5-3.5h4.5M13 16l1 3.5 3.5-2.5v-4.5M8 16l-3.5 3.5"/><circle cx="16" cy="8" r="1.5"/></svg></span>
+          <div><h4>Codeforces &amp; online contests</h4><p>Compete in Codeforces rounds or other online competitions. No limit, so go crazy.</p></div>
+          <span class="rule__pts mono">1 each · no limit</span>
+        </li>
+        <li class="card rule" data-reveal="stagger">
+          <span class="icon-tile"><svg data-icon="medal" class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><circle cx="12" cy="15" r="5.5"/><path d="M8.5 10.5 5 3h4l3 6 3-6h4l-3.5 7.5"/><path d="m12 12.5.9 1.8 2 .3-1.5 1.4.4 2-1.8-1-1.8 1 .4-2-1.5-1.4 2-.3.9-1.8Z"/></svg></span>
+          <div><h4>USACO</h4><p>0.5 points for each attempt, plus 0.5 for every problem where you pass at least half the test cases.</p></div>
+          <span class="rule__pts mono">0.5 + 0.5/problem · no limit</span>
+        </li>
+        <li class="card rule" data-reveal="stagger">
+          <span class="icon-tile"><svg data-icon="sparkles" class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M12 3v4M12 17v4M3 12h4M17 12h4M6 6l2.5 2.5M15.5 15.5 18 18M6 18l2.5-2.5M15.5 8.5 18 6"/></svg></span>
+          <div><h4>CS memes</h4><p>DM CS memes (picture or reel) to the club Instagram.</p></div>
+          <span class="rule__pts mono">5 memes = 0.5 · max 0.5</span>
+        </li>
+      </ul>
+
+      <p class="privacy-note"><svg data-icon="alert" class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M12 3.5 2.5 20h19L12 3.5Z"/><path d="M12 10v4.5M12 17.5v.01"/></svg><span><strong>Demerits are in effect this year.</strong> Please act responsibly at meetings and events.</span></p>
     </div>
   </section>
 </main>

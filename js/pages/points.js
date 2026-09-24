@@ -5,9 +5,9 @@ import CONFIG from '../../config.js';
 import { initApp, toast } from '../core/app.js';
 import { scrollToY } from '../core/embed.js';
 import { icon } from '../core/icons.js';
-import { esc, fmt, hashIndex, initials, isPlaceholder, prefersReducedMotion } from '../core/utils.js';
+import { esc, fmt, hashIndex, initials, prefersReducedMotion } from '../core/utils.js';
 import { normalize, searchPeople, suggestPeople } from '../lib/fuzzy.js';
-import { IS_DEMO, loadPoints, pointsToNextRank } from '../lib/points-data.js';
+import { HAS_SHEET, loadPoints, pointsToNextRank } from '../lib/points-data.js';
 
 initApp();
 
@@ -41,13 +41,15 @@ const fmtNum = (n) => (Number.isInteger(n) ? n.toLocaleString() : n.toLocaleStri
 const avatar = (name, cls = '') => `<span class="avatar ${cls} avatar--h${hashIndex(name, 6)}" aria-hidden="true">${esc(initials(name))}</span>`;
 const activeCats = () => CATS.filter((c) => state.columns?.[c.col]);
 
-/* ---------------- Point values explainer ---------------- */
-document.querySelectorAll('[data-point-value]').forEach((el) => {
-  const v = P.POINT_VALUES?.[el.dataset.pointValue];
-  el.textContent = isPlaceholder(v) ? 'X' : String(v);
-  if (isPlaceholder(v)) el.title = 'Point value coming soon';
+/* ---------------- Sheet connected? Otherwise show "coming soon" ---------------- */
+const EOS_GOAL = Number(P.EOS_GOAL) || 0;
+document.querySelectorAll('[data-eos-goal]').forEach((el) => {
+  el.textContent = String(EOS_GOAL);
 });
-document.querySelector('[data-demo-banner]').hidden = !IS_DEMO;
+document.querySelectorAll('[data-points-live]').forEach((el) => {
+  el.hidden = !HAS_SHEET;
+});
+document.querySelector('[data-points-soon]').hidden = HAS_SHEET;
 
 /* ---------------- Search combobox ---------------- */
 function highlight(name, query) {
@@ -223,6 +225,15 @@ function renderResult(p) {
         ? `${icon('target')}<span><strong>${fmtNum(next.points)}</strong> more ${next.points === 1 ? 'point' : 'points'} to reach #${next.rank}.</span>`
         : `${icon('trophy')}<span>You're in first place. Nice work!</span>`
     }</p>
+    ${
+      EOS_GOAL
+        ? `<p class="result__next">${icon('star')}<span>${
+            p.total >= EOS_GOAL
+              ? `You've hit the <strong>${EOS_GOAL}-point</strong> goal for the end-of-semester party!`
+              : `<strong>${fmtNum(+(EOS_GOAL - p.total).toFixed(2))}</strong> more to reach the ${EOS_GOAL}-point end-of-semester party goal.`
+          }</span></p>`
+        : ''
+    }
   </article>`;
   countUp(resultBox.querySelector('[data-count]'), p.total);
   requestAnimationFrame(() =>
@@ -359,7 +370,7 @@ board.addEventListener('click', (e) => {
 /* ---------------- Loading + refresh ---------------- */
 function renderUpdated() {
   if (!state.fetchedAt) return;
-  updated.innerHTML = `<span class="live-dot" aria-hidden="true"></span>Last updated ${esc(fmt(state.fetchedAt, { hour: 'numeric', minute: '2-digit' }))}${IS_DEMO ? ' · <span class="badge badge--demo">Demo</span>' : ''}`;
+  updated.innerHTML = `<span class="live-dot" aria-hidden="true"></span>Last updated ${esc(fmt(state.fetchedAt, { hour: 'numeric', minute: '2-digit' }))}`;
 }
 
 async function load({ manual = false } = {}) {
@@ -396,9 +407,11 @@ async function load({ manual = false } = {}) {
 }
 
 refreshBtn.addEventListener('click', () => load({ manual: true }));
-setInterval(() => {
-  if (!document.hidden) load();
-}, Math.max(1, P.REFRESH_MINUTES || 5) * 60_000);
+if (HAS_SHEET) {
+  setInterval(() => {
+    if (!document.hidden) load();
+  }, Math.max(1, P.REFRESH_MINUTES || 5) * 60_000);
+}
 
 /** Prefill from the Home teaser (#q=name). The hash never reaches a server; we clear it right away. */
 function readPrefill() {
@@ -419,6 +432,7 @@ function readPrefill() {
 }
 
 (async () => {
+  if (!HAS_SHEET) return;
   const prefill = readPrefill();
   await load();
   if (prefill && state.loaded) {

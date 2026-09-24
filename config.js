@@ -43,41 +43,57 @@ const CONFIG = {
    * ------------------------------------------------------------------------ */
   MEETING: {
     day: 'Every other Monday', // Shown on Home + Contact
-    time: '4:00 PM',
-    room: 'PASTE_MEETING_ROOM', // e.g. 'Room B105' (hidden until filled in)
+    time: '3:00 – 3:45 PM',
+    room: 'Room B105',
     /* 24-hour time meetings usually END. Slides unlock at this time on the
      * meeting date unless a slides entry sets its own "availableFrom". */
-    endTime24: '17:00',
+    endTime24: '16:00',
     /* Timezone the club meets in (used for slide unlock times + the schedule). */
     timezone: 'America/Chicago',
 
-    /* Regular schedule. Until the Google Calendar below is connected, the
-     * Calendar page, "Next meeting" countdown and Home strip are generated
-     * from this. Once CALENDAR is filled in, Google Calendar takes over
-     * (so holidays and cancellations show correctly). */
+    /* Regular schedule, used by the Calendar page, the "Next meeting"
+     * countdown and the Home "Next up" strip.
+     * A meeting that falls on a no-school day (data/school-calendar.json) or
+     * on the same day as an MSA event (see CALENDAR below) moves to the next
+     * Monday; if that day is also blocked, it's canceled. */
     SCHEDULE: {
-      firstMeeting: '2026-09-21', // A known meeting date (YYYY-MM-DD); repeats from here on
+      firstMeeting: '2026-09-28', // First date of the every-other-week pattern (YYYY-MM-DD)
       everyWeeks: 2,              // 2 = every other week
-      startTime24: '16:00',       // 4:00 PM
-      durationMinutes: 60,        // Guess: change if meetings run longer/shorter
+      extraMeetings: ['2026-09-21'], // One-off meetings outside the pattern (already happened)
+      startTime24: '15:00',       // 3:00 PM
+      durationMinutes: 45,        // until 3:45 PM (sometimes runs to 4:00)
       title: 'Club Meeting',
     },
   },
 
   /* ---------------------------------------------------------------------------
-   * CALENDAR  (Calendar page, "Next meeting" countdown, Home "Upcoming" strip)
-   *  1. Make your Google Calendar public (see README → "Calendar").
-   *  2. Paste its Calendar ID below (looks like  abc123@group.calendar.google.com).
-   *  3. Create a Google Calendar API key restricted to your site's domain and
-   *     paste it below. (A browser API key is designed to be public — the
-   *     domain restriction is what protects it.)
+   * CALENDAR  (Calendar page, "Next meeting" countdown, Home "Next up" strip)
+   *  Shows: club meetings (schedule above) + FBISD holidays/no-school days
+   *  (data/school-calendar.json) + MSA events from the MSA master calendar.
    * ------------------------------------------------------------------------ */
   CALENDAR: {
-    CALENDAR_ID: 'PASTE_GOOGLE_CALENDAR_ID_HERE',
-    CALENDAR_API_KEY: 'PASTE_GOOGLE_CALENDAR_API_KEY_HERE',
+    /* Only months in this range can be viewed (school year). */
+    RANGE: { start: '2026-08-01', end: '2027-05-31' },
+
+    /* Google Calendar API key. A browser key is visible to visitors by design;
+     * restrict it in Google Cloud to your site's address (see README). */
+    CALENDAR_API_KEY: 'AIzaSyAbgEg32t1FspisIWjKEoWgxhE1d9gna74',
+
+    /* Dulles MSA master calendar (public). Events whose title contains an
+     * MSA_KEYWORD (and none of MSA_IGNORE) are shown and block CS meetings
+     * that day, e.g. "MSA Monthly Meeting", "Halloween Social". Other clubs'
+     * meetings on that calendar are ignored. */
+    MSA_CALENDAR_ID: 'a9c2c3cbd3c4330f4ead957c94470c8772b071fbc3a870b6145b7103ee62c1fa@group.calendar.google.com',
+    MSA_KEYWORDS: ['msa', 'social'],
+    MSA_IGNORE: ['club', 'mao', 'interest meeting'],
+
+    /* OPTIONAL: if the club makes its own Google Calendar later, paste its ID
+     * here. Club events then come from it instead of the schedule above. */
+    CALENDAR_ID: '',
+
     CACHE_MINUTES: 5, // How long to reuse fetched events (per browser tab).
-    /* Events are color-coded by the FIRST type whose keyword appears in the
-     * event title (then description). Order matters. Case doesn't. */
+    /* Colors for events from the club's own calendar are picked by the FIRST
+     * type whose keyword starts a word in the title. Order matters. */
     EVENT_TYPES: [
       { id: 'contest',  label: 'Contest',  keywords: ['contest', 'competition', 'uil', 'hackathon', 'invitational', 'hp codewars', 'acsl', 'usaco'] },
       { id: 'workshop', label: 'Workshop', keywords: ['workshop', 'lesson', 'tutorial', 'guest', 'speaker', 'talk', 'bootcamp'] },
@@ -95,8 +111,12 @@ const CONFIG = {
    *  ⚠ Published sheets are PUBLIC. Consider "First name + last initial".
    * ------------------------------------------------------------------------ */
   POINTS: {
-    // Your published sheet (the "pubhtml" embed link works too; it's converted to CSV automatically).
-    POINTS_SHEET_URL: 'https://docs.google.com/spreadsheets/d/e/2PACX-1vRkV0yhlusJjQHhYwAoF-E8JcD3BxF12Sv6hA5E_mNNBUnJUU8ZsIYDAPSxwMU3EMI5tyo0YqVEdj5e/pub?gid=1452997756&single=true&output=csv',
+    /* The points sheet is disconnected for now (last year's roster).
+     * When the new one is ready: File → Share → Publish to web → the points
+     * tab → CSV → Publish, and paste the link here. Until then the Points
+     * page shows "How points work" and a "coming soon" note.
+     * ⚠ Published sheets are PUBLIC. Consider "First name + last initial". */
+    POINTS_SHEET_URL: '',
 
     /* Header names in YOUR sheet. If a header isn't found the site tries to
      * auto-detect it (e.g. "Student", "Attendance", "Solved", "Score"). */
@@ -118,18 +138,9 @@ const CONFIG = {
       contests: [], // e.g. ['Contest *']
     },
 
-    /* How many points each thing is worth — shown in "How points work".
-     * Replace the 'X' placeholders with numbers, e.g. meeting: 1. */
-    POINT_VALUES: {
-      meeting: 'X', // per meeting attended
-      problem: 'X', // per problem solved
-      contest: 'X', // per contest competed in
-    },
-
-    /* false = your sheet already stores POINTS in each column (most common).
-     * true  = your sheet stores COUNTS (e.g. 5 meetings) and the site should
-     *         multiply by POINT_VALUES above (only once those are numbers). */
-    VALUES_ARE_COUNTS: false,
+    /* Points needed each semester to attend the end-of-semester (EOS) party.
+     * Shown in "How points work" and on each member's result card. */
+    EOS_GOAL: 7,
 
     REFRESH_MINUTES: 5, // Auto-refresh while the page is open.
     PAGE_SIZE: 25,      // Leaderboard rows per page.

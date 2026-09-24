@@ -38,6 +38,11 @@ function replaceRegion(html, name, content) {
   return html.replace(re, (m, open, close) => `${open}\n${content}\n${close}`);
 }
 
+/** Add/remove the `hidden` attribute on every element carrying `attr`. */
+function setHidden(html, attr, hidden) {
+  return html.replace(new RegExp(`(${attr})( hidden)?(?=[\\s>])`, 'g'), hidden ? '$1 hidden' : '$1');
+}
+
 function fillIcons(html) {
   return html.replace(/<svg([^>]*?)\sdata-icon="(\w+)"([^>]*)>[\s\S]*?<\/svg>/g, (m, before, name, after) => {
     if (!ICON_PATHS[name]) throw new Error(`Unknown icon "${name}"`);
@@ -62,9 +67,14 @@ for (const page of PAGES) {
     html = html.replace(/data-officers(?: data-sig="[^"]*")?/, `data-officers data-sig="${hashString(JSON.stringify(officers))}"`);
   }
   if (page.key === 'contact') html = replaceRegion(html, 'sponsor-list', renderSponsorList(officers));
-  // Bake the demo banner's visibility in (it only depends on config.js) to avoid layout shift.
-  const demo = { calendar: CAL_SOURCE !== 'google', points: isPlaceholder(CONFIG.POINTS.POINTS_SHEET_URL) }[page.key];
-  if (demo !== undefined) html = html.replace(/(data-demo-banner)( hidden)?/, demo ? '$1' : '$1 hidden');
+  // Bake config-dependent visibility in (avoids layout shift when JS loads).
+  if (page.key === 'calendar') html = setHidden(html, 'data-demo-banner', CAL_SOURCE === 'google');
+  // Points: "coming soon" until a sheet is connected (baked in to avoid layout shift).
+  const hasSheet = !isPlaceholder(CONFIG.POINTS.POINTS_SHEET_URL);
+  html = setHidden(html, 'data-points-live', !hasSheet);
+  html = setHidden(html, 'data-points-soon', hasSheet);
+  html = setHidden(html, 'data-teaser-live', !hasSheet);
+  html = setHidden(html, 'data-teaser-soon', hasSheet);
   if (page.key === 'calendar') {
     html = html
       .replace(/demo-banner( demo-banner--info)? demo-banner--spaced/, `demo-banner${CAL_SOURCE === 'schedule' ? ' demo-banner--info' : ''} demo-banner--spaced`)
@@ -132,6 +142,7 @@ const data = {
   'slides.json': JSON.parse(await read('data/slides.json')),
   'officers.json': officers,
   'gallery.json': JSON.parse(await read('data/gallery.json')),
+  'school-calendar.json': JSON.parse(await read('data/school-calendar.json')),
 };
 
 const pageByPath = new Map(PAGES.map((p) => [`/${p.path}`, p]));

@@ -5,40 +5,86 @@
       "title": "President",
       "featured": true,
       "members": [
-        { "name": "Kavish Mehta", "role": "President", "photo": "" }
+        {
+          "name": "Kavish Mehta",
+          "role": "President",
+          "photo": ""
+        }
       ]
     },
     {
       "title": "Vice Presidents",
       "members": [
-        { "name": "Arnav Doshi", "role": "Vice President", "photo": "" },
-        { "name": "Ahaan Thota", "role": "Vice President", "photo": "" }
+        {
+          "name": "Arnav Doshi",
+          "role": "Vice President",
+          "photo": ""
+        },
+        {
+          "name": "Ahaan Thota",
+          "role": "Vice President",
+          "photo": ""
+        }
       ]
     },
     {
       "title": "Advanced Coaches",
       "members": [
-        { "name": "Saharsh Maddi", "role": "Advanced Coach", "photo": "" },
-        { "name": "Arush Kankanala", "role": "Advanced Coach", "photo": "" }
+        {
+          "name": "Saharsh Maddi",
+          "role": "Advanced Coach",
+          "photo": ""
+        },
+        {
+          "name": "Arush Kankanala",
+          "role": "Advanced Coach",
+          "photo": ""
+        }
       ]
     },
     {
       "title": "Novice Coaches",
       "members": [
-        { "name": "Bhagat Kundoor", "role": "Novice Coach", "photo": "" },
-        { "name": "Neev Sankarrajan", "role": "Novice Coach", "photo": "" }
+        {
+          "name": "Bhagat Kundoor",
+          "role": "Novice Coach",
+          "photo": ""
+        },
+        {
+          "name": "Neev Sankarrajan",
+          "role": "Novice Coach",
+          "photo": ""
+        }
       ]
     },
     {
       "title": "Secretary & Historian",
       "members": [
-        { "name": "Aarin Kumar", "role": "Secretary", "photo": "" },
-        { "name": "Soham Rananavare", "role": "Historian", "photo": "" }
+        {
+          "name": "Aarin Kumar",
+          "role": "Secretary",
+          "photo": ""
+        },
+        {
+          "name": "Soham Rananavare",
+          "role": "Historian",
+          "photo": ""
+        }
       ]
     }
   ],
   "sponsors": [
-    { "name": "Mr. Rogers", "role": "Club Sponsor", "room": "B105", "photo": "" },
-    { "name": "Coach Garrett", "role": "Club Sponsor", "room": "A-105", "photo": "" }
+    {
+      "name": "Mr. Rogers",
+      "role": "Club Sponsor",
+      "room": "B105",
+      "photo": ""
+    },
+    {
+      "name": "Coach Garrett",
+      "role": "Club Sponsor",
+      "room": "",
+      "photo": ""
+    }
   ]
 }

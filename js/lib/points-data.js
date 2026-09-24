@@ -6,7 +6,8 @@ import { isPlaceholder } from '../core/utils.js';
 import { parseCSV } from './csv.js';
 
 const P = CONFIG.POINTS;
-export const IS_DEMO = isPlaceholder(P.POINTS_SHEET_URL);
+/** False while no points sheet is connected (the Points page shows "coming soon"). */
+export const HAS_SHEET = !isPlaceholder(P.POINTS_SHEET_URL);
 export const CATEGORIES = ['meetings', 'problems', 'contests'];
 
 const SYNONYMS = {
@@ -113,13 +114,6 @@ export function buildPeople(csvText) {
     }
   }
 
-  const pv = P.POINT_VALUES || {};
-  const multiplier = {
-    meetings: P.VALUES_ARE_COUNTS && !isPlaceholder(pv.meeting) ? Number(pv.meeting) || 1 : 1,
-    problems: P.VALUES_ARE_COUNTS && !isPlaceholder(pv.problem) ? Number(pv.problem) || 1 : 1,
-    contests: P.VALUES_ARE_COUNTS && !isPlaceholder(pv.contest) ? Number(pv.contest) || 1 : 1,
-  };
-
   const people = [];
   const seen = new Set();
   for (const row of body) {
@@ -127,11 +121,11 @@ export function buildPeople(csvText) {
     if (!name || JUNK_NAMES.test(name)) continue;
     const person = { name };
     for (const cat of CATEGORIES) {
-      person[cat] = map[cat].reduce((sum, i) => sum + num(row[i]), 0) * multiplier[cat];
+      person[cat] = map[cat].reduce((sum, i) => sum + num(row[i]), 0);
     }
     const sum = CATEGORIES.reduce((s, c) => s + person[c], 0);
     const hasTotal = map.total >= 0 && String(row[map.total] ?? '').trim() !== '';
-    person.total = hasTotal && !P.VALUES_ARE_COUNTS ? num(row[map.total]) : sum;
+    person.total = hasTotal ? num(row[map.total]) : sum;
     // Disambiguate duplicate names so each row stays selectable.
     let key = name.toLowerCase();
     let n = 2;
@@ -169,58 +163,19 @@ export function pointsToNextRank(person, people) {
   return { points: +(target - person.total).toFixed(2), rank: targetRank };
 }
 
-/* ---------------- DEMO data (only while the sheet URL is a placeholder) ---------------- */
-const DEMO_NAMES = [
-  'Ava Martinez', 'Liam Chen', 'Sofia Patel', 'Noah Johnson', 'Mia Nguyen', 'Ethan Brooks', 'Isabella García',
-  'Lucas Kim', 'Amelia Singh', 'Mason Rivera', 'Harper Lee', 'Elijah Thompson', 'Evelyn Okafor', 'James Park',
-  'Abigail Rossi', 'Benjamin Cruz', 'Emily Zhang', 'Henry Adeyemi', 'Ella Kowalski', 'Alexander Reyes',
-  'Chloé Dubois', 'Daniel Murphy', 'Zoë Anderson', 'Matthew Ito', 'Aria Hassan', 'Samuel Novak', 'Layla Ahmed',
-  'Jack Wilson', 'Nora Fischer', 'Owen Sato', 'Riley Bennett', 'Leo Moreau', 'Hazel Kapoor', 'Julian Santos',
-  'Violet Morgan', 'Levi Ortiz', 'Aurora Silva', 'Isaac Wright', 'Stella Ivanova', 'Gabriel Costa', 'Lucy Tanaka',
-  'Caleb Hughes', 'Maya Desai', 'Ryan O’Connor', 'Naomi Ferreira', 'Adrian Petrov', 'Elena Vasquez', 'Miles Carter',
-];
-
-/** Deterministic pseudo-random numbers so demo data is stable between reloads. */
-function seeded(seed) {
-  let s = seed;
-  return () => {
-    s = (s * 1664525 + 1013904223) % 4294967296;
-    return s / 4294967296;
-  };
-}
-
-export function demoCSV() {
-  const rnd = seeded(42);
-  const lines = ['Name,Meetings,Problems,Contests,Total'];
-  for (const name of DEMO_NAMES) {
-    const meetings = Math.round(rnd() * 14) + 1;
-    const problems = Math.round(rnd() ** 1.6 * 40);
-    const contests = Math.round(rnd() ** 2 * 5) * 5;
-    lines.push(`"${name}",${meetings},${problems},${contests},${meetings + problems + contests}`);
-  }
-  lines.push(',,,,', 'Total,,,,'); // Trailing junk rows, like real sheets often have.
-  return lines.join('\n');
-}
-
-/** Fetch + parse. Returns { people, columns, demo, fetchedAt }. */
+/** Fetch + parse. Returns { people, columns, fetchedAt }. */
 export async function loadPoints() {
-  let text;
-  if (IS_DEMO) {
-    text = demoCSV();
-  } else {
-    const url = toCsvUrl(P.POINTS_SHEET_URL);
-    let res;
-    try {
-      res = await fetch(url, { cache: 'no-store' });
-    } catch {
-      throw new Error('Couldn’t reach Google Sheets. Check your connection and try again.');
-    }
-    if (!res.ok) throw new Error(`The points sheet returned an error (${res.status}). Is it published to the web?`);
-    text = await res.text();
-    if (/^\s*<(!doctype|html)/i.test(text)) {
-      throw new Error('The points link returned a web page instead of CSV. Use File → Share → Publish to web → CSV.');
-    }
+  let res;
+  try {
+    res = await fetch(toCsvUrl(P.POINTS_SHEET_URL), { cache: 'no-store' });
+  } catch {
+    throw new Error('Couldn’t reach Google Sheets. Check your connection and try again.');
+  }
+  if (!res.ok) throw new Error(`The points sheet returned an error (${res.status}). Is it published to the web?`);
+  const text = await res.text();
+  if (/^\s*<(!doctype|html)/i.test(text)) {
+    throw new Error('The points link returned a web page instead of CSV. Use File → Share → Publish to web → CSV.');
   }
   const { people, columns } = buildPeople(text);
-  return { people, columns, demo: IS_DEMO, fetchedAt: new Date() };
+  return { people, columns, fetchedAt: new Date() };
 }

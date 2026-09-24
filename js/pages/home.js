@@ -6,6 +6,7 @@ import { icon } from '../core/icons.js';
 import { esc, isPlaceholder, prefersReducedMotion } from '../core/utils.js';
 import { getUpcoming, pickNextMeeting } from '../lib/calendar-data.js';
 import { countdownMarkup, formatWhen, openEventModal, startCountdown } from '../lib/event-ui.js';
+import { HAS_SHEET } from '../lib/points-data.js';
 import { loadSlides } from '../lib/slides-data.js';
 import { enableCardFx, latestOpenId, numberSlides, slideCard, slideSkeletons } from '../lib/slide-card.js';
 
@@ -79,7 +80,7 @@ async function renderUpcoming() {
   const calTarget = document.querySelector('.header-cta')?.getAttribute('target');
   const calLink = `<a class="btn btn--ghost" href="${esc(calHref)}"${calTarget ? ` target="${esc(calTarget)}"` : ''}>Full calendar ${icon('arrowRight')}</a>`;
   try {
-    const { events, demo } = await getUpcoming();
+    const { events } = await getUpcoming();
     const ev = pickNextMeeting(events);
     if (!ev) {
       box.innerHTML = `<div><p class="upcoming__label">${icon('calendar')} Next up</p>
@@ -90,7 +91,7 @@ async function renderUpcoming() {
     }
     const live = ev.start <= new Date();
     box.innerHTML = `<div>
-        <p class="upcoming__label"><span class="live-dot" aria-hidden="true"></span> ${live ? 'Happening now' : 'Next up'} ${demo ? '<span class="badge badge--demo">Demo</span>' : ''}</p>
+        <p class="upcoming__label"><span class="live-dot" aria-hidden="true"></span> ${live ? 'Happening now' : 'Next up'}</p>
         <h3 class="upcoming__title">${esc(ev.title)}</h3>
         <p class="upcoming__meta"><span>${icon('clock')}${esc(formatWhen(ev))}</span>${ev.location ? `<span>${icon('pin')}${esc(ev.location)}</span>` : ''}</p>
       </div>
@@ -165,8 +166,14 @@ async function renderGallery() {
 
 /* ---------- Points teaser → Points page with the name in the #hash (never sent to a server) ---------- */
 function initTeaser() {
+  document.querySelectorAll('[data-teaser-live]').forEach((el) => {
+    el.hidden = !HAS_SHEET;
+  });
+  document.querySelectorAll('[data-teaser-soon]').forEach((el) => {
+    el.hidden = HAS_SHEET;
+  });
   const form = document.querySelector('[data-points-teaser]');
-  if (!form) return;
+  if (!form || !HAS_SHEET) return;
   form.addEventListener('submit', (e) => {
     e.preventDefault();
     const q = form.querySelector('input').value.trim();
