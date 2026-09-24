@@ -265,7 +265,11 @@
         <p class="upcoming__meta">New dates are posted on the calendar as soon as they're set.</p></div>
         <div class="upcoming__actions">${a}</div>`;return}let{live:l,heading:i,name:d}=Dt(c);t.innerHTML=`<div>
         <h3 class="upcoming__title">${i}</h3>
-        <p class="upcoming__meta">${d?`${p(d)} \xB7 `:""}${p(K(c))}${c.location?` \xB7 ${p(c.location)}`:""}</p>
+        <ul class="facts">
+          ${d?`<li>${p(d)}</li>`:""}
+          <li>${p(K(c))}</li>
+          ${c.location?`<li>${p(c.location)}</li>`:""}
+        </ul>
       </div>
       ${l?"":`<div aria-label="Time until it starts">${xt()}</div>`}
       <div class="upcoming__actions">

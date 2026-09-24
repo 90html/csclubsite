@@ -30,7 +30,11 @@ async function renderUpcoming() {
     const { live, heading, name } = nextMeetingText(ev);
     box.innerHTML = `<div>
         <h3 class="upcoming__title">${heading}</h3>
-        <p class="upcoming__meta">${name ? `${esc(name)} · ` : ''}${esc(formatTimeDate(ev))}${ev.location ? ` · ${esc(ev.location)}` : ''}</p>
+        <ul class="facts">
+          ${name ? `<li>${esc(name)}</li>` : ''}
+          <li>${esc(formatTimeDate(ev))}</li>
+          ${ev.location ? `<li>${esc(ev.location)}</li>` : ''}
+        </ul>
       </div>
       ${live ? '' : `<div aria-label="Time until it starts">${countdownMarkup()}</div>`}
       <div class="upcoming__actions">
