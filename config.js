@@ -27,7 +27,7 @@ const CONFIG = {
   CLUB_EMAIL: 'dullescomputerscience@gmail.com',
 
   /* Remind class code. Leave '' to hide it. */
-  REMIND_CODE: '@dhscs27',
+  REMIND_CODE: 'dhscs27',
 
   /* Social links. Leave a value as '' to hide it everywhere. */
   SOCIAL: {
