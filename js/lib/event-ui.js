@@ -70,6 +70,41 @@ export function openEventModal(ev, returnFocus) {
   openModal({ title: ev.title, eyebrow: ev.type.label, body, accent: TYPE_COLORS[ev.type.id] || TYPE_COLORS.other, returnFocus });
 }
 
+/* Rolling digits: each digit is a vertical strip 0, 9, 8 … 0 slid with a CSS
+ * transform, so counting down always scrolls the same way. For 0 → 9 the
+ * strip first jumps (unanimated) from the bottom 0 to the identical top 0,
+ * then rolls on to 9. */
+const STRIP = [0, 9, 8, 7, 6, 5, 4, 3, 2, 1, 0];
+const ROW_EM = 1.1; // keep in sync with .roll height in site.css
+
+function digitColumn() {
+  const col = document.createElement('span');
+  col.className = 'roll';
+  col.innerHTML = `<span class="roll__strip">${STRIP.map((d) => `<span>${d}</span>`).join('')}</span>`;
+  return col;
+}
+
+function setDigit(col, digit) {
+  const strip = col.firstElementChild;
+  const prev = col.dataset.value === undefined ? null : Number(col.dataset.value);
+  if (prev === digit) return;
+  col.dataset.value = String(digit);
+  const move = (row, animate) => {
+    strip.classList.toggle('no-anim', !animate);
+    strip.style.transform = `translateY(${-row * ROW_EM}em)`;
+    if (!animate) void strip.offsetHeight; // commit the jump before the next move
+  };
+  if (prev === 0 && digit === 9) move(0, false);
+  move(10 - digit, prev !== null);
+}
+
+function setUnit(u, text) {
+  const digits = u.querySelector('.roll-group');
+  if (digits.children.length !== text.length) digits.replaceChildren(...[...text].map(digitColumn));
+  [...text].forEach((c, i) => setDigit(digits.children[i], Number(c)));
+  u.querySelector('.sr-only').textContent = text;
+}
+
 /** Live countdown; returns a stop() function. */
 export function startCountdown(el, ev, onDone) {
   const units = el.querySelectorAll('[data-unit]');
@@ -82,10 +117,7 @@ export function startCountdown(el, ev, onDone) {
     }
     let s = Math.floor((ev.start.getTime() - now) / 1000);
     const values = { d: Math.floor(s / 86400), h: Math.floor((s %= 86400) / 3600), m: Math.floor((s %= 3600) / 60), s: s % 60 };
-    units.forEach((u) => {
-      const v = String(values[u.dataset.unit]).padStart(2, '0');
-      if (u.textContent !== v) u.textContent = v;
-    });
+    units.forEach((u) => setUnit(u, String(values[u.dataset.unit]).padStart(2, '0')));
   };
   const timer = setInterval(tick, 1000);
   const stop = () => clearInterval(timer);
@@ -94,10 +126,9 @@ export function startCountdown(el, ev, onDone) {
 }
 
 export function countdownMarkup() {
+  const unit = (k, label) =>
+    `<div><span class="countdown__num" data-unit="${k}"><span class="roll-group" aria-hidden="true">--</span><span class="sr-only"></span></span><small>${label}</small></div>`;
   return `<div class="countdown mono" role="timer" aria-live="off">
-    <div><span data-unit="d">--</span><small>days</small></div>
-    <div><span data-unit="h">--</span><small>hrs</small></div>
-    <div><span data-unit="m">--</span><small>min</small></div>
-    <div><span data-unit="s">--</span><small>sec</small></div>
+    ${unit('d', 'days')}${unit('h', 'hrs')}${unit('m', 'min')}${unit('s', 'sec')}
   </div>`;
 }

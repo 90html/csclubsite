@@ -998,12 +998,38 @@ body.drawer-open {
   background: rgba(255, 255, 255, 0.04);
   border: 1px solid var(--border);
 }
-.countdown span {
+.countdown__num {
   display: block;
   font-size: 1.35rem;
   font-weight: 600;
   line-height: 1.1;
   font-variant-numeric: tabular-nums;
+}
+.roll-group {
+  display: inline-flex;
+}
+/* One digit window: shows a single row of its 0–9 strip. */
+.roll {
+  display: inline-block;
+  height: 1.1em;
+  overflow: hidden;
+}
+.roll__strip {
+  display: flex;
+  flex-direction: column;
+  transition: transform 0.45s var(--ease);
+}
+.roll__strip > span {
+  height: 1.1em;
+  line-height: 1.1;
+}
+.roll__strip.no-anim {
+  transition: none;
+}
+@media (prefers-reduced-motion: reduce) {
+  .roll__strip {
+    transition: none;
+  }
 }
 .countdown small {
   font-size: 0.65rem;
