@@ -1,10 +1,9 @@
-/* Home: next meeting strip, latest slides, points teaser. */
+/* Home: next meeting strip and latest slides. */
 import { initApp, observeReveal } from '../core/app.js';
 import { icon } from '../core/icons.js';
 import { esc } from '../core/utils.js';
 import { getUpcoming, pickNextMeeting } from '../lib/calendar-data.js';
-import { countdownMarkup, formatWhen, openEventModal, startCountdown } from '../lib/event-ui.js';
-import { HAS_SHEET } from '../lib/points-data.js';
+import { countdownMarkup, formatTimeDate, openEventModal, startCountdown } from '../lib/event-ui.js';
 import { loadSlides } from '../lib/slides-data.js';
 import { latestOpenId, numberSlides, slideCard, slideSkeletons } from '../lib/slide-card.js';
 
@@ -22,7 +21,7 @@ async function renderUpcoming() {
     const { events } = await getUpcoming();
     const ev = pickNextMeeting(events);
     if (!ev) {
-      box.innerHTML = `<div><p class="upcoming__label">${icon('calendar')} Next up</p>
+      box.innerHTML = `<div><p class="upcoming__label">Next up</p>
         <h3 class="upcoming__title">No meetings scheduled yet</h3>
         <p class="upcoming__meta">New dates are posted on the calendar as soon as they're set.</p></div>
         <div class="upcoming__actions">${calLink}</div>`;
@@ -32,7 +31,7 @@ async function renderUpcoming() {
     box.innerHTML = `<div>
         <p class="upcoming__label"><span class="live-dot" aria-hidden="true"></span> ${live ? 'Happening now' : 'Next up'}</p>
         <h3 class="upcoming__title">${esc(ev.title)}</h3>
-        <p class="upcoming__meta"><span>${icon('clock')}${esc(formatWhen(ev))}</span>${ev.location ? `<span>${icon('pin')}${esc(ev.location)}</span>` : ''}</p>
+        <p class="upcoming__meta">${esc(formatTimeDate(ev))}${ev.location ? ` · ${esc(ev.location)}` : ''}</p>
       </div>
       ${live ? '' : `<div aria-label="Time until it starts">${countdownMarkup()}</div>`}
       <div class="upcoming__actions">
@@ -43,7 +42,7 @@ async function renderUpcoming() {
     const cd = box.querySelector('.countdown');
     if (cd) startCountdown(cd, ev, () => renderUpcoming());
   } catch {
-    box.innerHTML = `<div><p class="upcoming__label">${icon('calendar')} Next up</p>
+    box.innerHTML = `<div><p class="upcoming__label">Next up</p>
       <h3 class="upcoming__title">Check the calendar for the next meeting</h3>
       <p class="upcoming__meta">We couldn't load upcoming events right now.</p></div>
       <div class="upcoming__actions">${calLink}</div>`;
@@ -75,26 +74,5 @@ async function renderSlides() {
   }
 }
 
-/* ---------- Points teaser → Points page with the name in the #hash (never sent to a server) ---------- */
-function initTeaser() {
-  document.querySelectorAll('[data-teaser-live]').forEach((el) => {
-    el.hidden = !HAS_SHEET;
-  });
-  document.querySelectorAll('[data-teaser-soon]').forEach((el) => {
-    el.hidden = HAS_SHEET;
-  });
-  const form = document.querySelector('[data-points-teaser]');
-  if (!form || !HAS_SHEET) return;
-  form.addEventListener('submit', (e) => {
-    e.preventDefault();
-    const q = form.querySelector('input').value.trim();
-    const link = form.querySelector('[data-points-link]');
-    const url = `${link.href.split('#')[0]}${q ? `#q=${encodeURIComponent(q)}` : ''}`;
-    if (link.target === '_top') window.open(url, '_top');
-    else location.href = url;
-  });
-}
-
 renderUpcoming();
 renderSlides();
-initTeaser();

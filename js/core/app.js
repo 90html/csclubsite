@@ -174,8 +174,10 @@ function fillConfigSlots() {
       return;
     }
     if (el.tagName === 'A') el.href = `mailto:${email}`;
-    const label = el.querySelector('[data-club-email-text]') || el;
-    label.textContent = email;
+    // Fill the address into [data-club-email-text], or into the element itself
+    // when it has no label of its own ("Open in your email app" keeps its text).
+    const label = el.querySelector('[data-club-email-text]') || (el.textContent.trim() ? null : el);
+    if (label) label.textContent = email;
     el.hidden = false;
   });
 

@@ -87,8 +87,6 @@ for (const page of PAGES) {
   const hasSheet = !isPlaceholder(CONFIG.POINTS.POINTS_SHEET_URL);
   html = setHidden(html, 'data-points-live', !hasSheet);
   html = setHidden(html, 'data-points-soon', hasSheet);
-  html = setHidden(html, 'data-teaser-live', !hasSheet);
-  html = setHidden(html, 'data-teaser-soon', hasSheet);
   if (page.key === 'calendar') {
     html = html
       .replace(/demo-banner( demo-banner--info)? demo-banner--spaced/, `demo-banner${CAL_SOURCE === 'schedule' ? ' demo-banner--info' : ''} demo-banner--spaced`)
@@ -151,7 +149,7 @@ await write(
 
 /* ---------------------------------------------------------------- 5 Weebly export */
 const GOOGLE_FONTS =
-  'https://fonts.googleapis.com/css2?family=Inter:wght@400..700&family=JetBrains+Mono:wght@400..600&family=Space+Grotesk:wght@500..700&display=swap';
+  'https://fonts.googleapis.com/css2?family=Inter:wght@400..700&family=JetBrains+Mono:wght@400..800&display=swap';
 
 const css = (await read('css/site.css')).replace(/@font-face\s*{[^}]*}/g, '');
 const minCss = (await esbuild.transform(css, { loader: 'css', minify: true })).code;
@@ -215,7 +213,7 @@ const hostedSnippets = [];
 let n = 0;
 for (const page of PAGES) {
   n++;
-  const entry = join(ROOT, `js/pages/${page.key === 'gettingStarted' ? 'getting-started' : page.key}.js`);
+  const entry = join(ROOT, `js/pages/${page.script || page.key}.js`);
   const bundle = await esbuild.build({
     entryPoints: [entry],
     bundle: true,
@@ -246,7 +244,7 @@ for (const page of PAGES) {
   html = html.replace(/<script type="module" src="[^"]*"><\/script>/, () => `<script>${safeScript(js)}</script>`);
   html = absolutize(html, page).replace(/<!-- \/?@\w+ -->\n?/g, '');
 
-  const slug = page.key === 'gettingStarted' ? 'getting-started' : page.key;
+  const slug = page.path.replace(/\/$/, '') || 'home';
   await write(`weebly-export/standalone/${slug}.html`, html);
 
   const id = `dhscs-${slug}`;
@@ -276,7 +274,7 @@ ${hostedSnippets.join('\n\n')}
 
 const sizes = await Promise.all(
   PAGES.map(async (p, i) => {
-    const slug = p.key === 'gettingStarted' ? 'getting-started' : p.key;
+    const slug = p.path.replace(/\/$/, '') || 'home';
     const s = await read(`weebly-export/${i + 1}-${slug}.html`);
     return `${slug}: ${(s.length / 1024).toFixed(0)} KB`;
   }),

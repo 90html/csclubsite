@@ -1,5 +1,6 @@
 /* Shared page chrome (head, header, footer) used by tools/build.mjs.
- * Edit page titles/descriptions in PAGES below, then run `npm run build`. */
+ * Edit page titles/descriptions in PAGES below, then run `npm run build`.
+ * `script` is the file in js/pages/ a page loads (defaults to its key). */
 
 export const PAGES = [
   {
@@ -12,13 +13,13 @@ export const PAGES = [
       'The Dulles High School Computer Science Club: weekly meetings, Java from zero, competitive programming and UIL contests. Beginners welcome.',
   },
   {
-    key: 'gettingStarted',
-    file: 'getting-started/index.html',
-    path: 'getting-started/',
-    nav: 'Getting Started',
-    title: 'Getting Started · Dulles Computer Science Club',
-    description:
-      'New to coding or contests? Four simple steps to join the DHS CS Club, set up Java, learn the basics and start solving problems.',
+    key: 'learnJava',
+    file: 'learn-java/index.html',
+    path: 'learn-java/',
+    nav: 'Learn Java',
+    script: 'static',
+    title: 'Learn Java · Dulles Computer Science Club',
+    description: 'Java setup guides, tutorials and practice problems recommended by the Dulles Computer Science Club.',
   },
   {
     key: 'slides',
@@ -34,7 +35,7 @@ export const PAGES = [
     path: 'calendar/',
     nav: 'Calendar',
     title: 'Calendar · Dulles Computer Science Club',
-    description: 'Upcoming DHS CS Club meetings, contests, workshops and socials, plus a countdown to the next meeting.',
+    description: 'Upcoming DHS CS Club meetings, contests, workshops and MSA events, plus a countdown to the next meeting.',
   },
   {
     key: 'points',
@@ -123,7 +124,7 @@ export function headPartial(page, config, iconVersion = '') {
 <link rel="apple-touch-icon" href="${root}assets/icons/apple-touch-icon.png${v}">
 <link rel="manifest" href="${root}site.webmanifest">
 <link rel="preload" href="${root}assets/fonts/inter-latin.woff2" as="font" type="font/woff2" crossorigin>
-<link rel="preload" href="${root}assets/fonts/space-grotesk-latin.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="preload" href="${root}assets/fonts/jetbrains-mono-latin.woff2" as="font" type="font/woff2" crossorigin>
 <link rel="stylesheet" href="${root}css/site.css">
 <script>document.documentElement.classList.add('js')</script>${ld}`;
 }

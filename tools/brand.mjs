@@ -35,21 +35,20 @@ await png(maskable, 512, 'icon-maskable-512.png');
 
 /* ---------- Open Graph image (1200×630) ---------- */
 const fonts = {};
-for (const f of ['space-grotesk-latin.woff2', 'inter-latin.woff2', 'jetbrains-mono-latin.woff2']) {
+for (const f of ['inter-latin.woff2', 'jetbrains-mono-latin.woff2']) {
   fonts[f] = `data:font/woff2;base64,${(await readFile(join(ROOT, 'assets/fonts', f))).toString('base64')}`;
 }
 const fontUrl = (f) => fonts[f];
 const og = `<!doctype html><html><head><style>
-@font-face{font-family:SG;src:url(${fontUrl('space-grotesk-latin.woff2')});font-weight:500 700}
 @font-face{font-family:IN;src:url(${fontUrl('inter-latin.woff2')});font-weight:400 700}
-@font-face{font-family:JB;src:url(${fontUrl('jetbrains-mono-latin.woff2')});font-weight:400 600}
+@font-face{font-family:JB;src:url(${fontUrl('jetbrains-mono-latin.woff2')});font-weight:400 800}
 *{margin:0;box-sizing:border-box}
 body{width:1200px;height:630px;overflow:hidden;background:#060a17;color:#eef1f8;font-family:IN;position:relative}
 .wrap{position:absolute;inset:0;padding:72px 80px;display:flex;flex-direction:column}
-.brand{display:flex;align-items:center;gap:18px;font-family:SG;font-weight:700;font-size:30px}
+.brand{display:flex;align-items:center;gap:18px;font-family:JB;font-weight:700;font-size:30px}
 .brand svg{width:64px;height:64px}
 .muted{color:#8e9ab8;font-weight:500}
-h1{margin-top:auto;font-family:SG;font-weight:700;font-size:92px;line-height:.98;letter-spacing:-.045em}
+h1{margin-top:auto;font-family:JB;font-weight:700;font-size:92px;line-height:1.08;letter-spacing:-.02em}
 .g{color:#e8354f}
 .row{margin-top:34px;display:flex;gap:14px;font-family:JB;font-size:22px}
 .chip{padding:10px 18px;border-radius:999px;border:1px solid rgba(255,255,255,.14);background:rgba(255,255,255,.05);color:#cfd6ea}

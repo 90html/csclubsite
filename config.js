@@ -95,7 +95,6 @@ const CONFIG = {
     EVENT_TYPES: [
       { id: 'contest',  label: 'Contest',  keywords: ['contest', 'competition', 'uil', 'hackathon', 'invitational', 'hp codewars', 'acsl', 'usaco'] },
       { id: 'workshop', label: 'Workshop', keywords: ['workshop', 'lesson', 'tutorial', 'guest', 'speaker', 'talk', 'bootcamp'] },
-      { id: 'social',   label: 'Social',   keywords: ['social', 'party', 'pizza', 'game', 'bonding', 'celebration', 'banquet'] },
       { id: 'meeting',  label: 'Meeting',  keywords: ['meeting', 'club', 'practice', 'session'] },
     ],
   },
@@ -157,7 +156,7 @@ const CONFIG = {
    * so the nav inside the embeds links to your Weebly pages. */
   WEEBLY_PAGE_URLS: {
     home: 'https://dhscompsci.weebly.com/',
-    gettingStarted: 'https://dhscompsci.weebly.com/getting-started.html',
+    learnJava: 'https://dhscompsci.weebly.com/learn-java.html',
     slides: 'https://dhscompsci.weebly.com/slides.html',
     calendar: 'https://dhscompsci.weebly.com/calendar.html',
     points: 'https://dhscompsci.weebly.com/points.html',

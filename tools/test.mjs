@@ -13,7 +13,7 @@ import { findChrome } from './chrome.mjs';
 const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), '..');
 const PORT = 8123;
 const BASE = `http://localhost:${PORT}`;
-const PAGES = ['/', '/getting-started/', '/slides/', '/calendar/', '/points/', '/officers/', '/contact/', '/404.html'];
+const PAGES = ['/', '/learn-java/', '/slides/', '/calendar/', '/points/', '/officers/', '/contact/', '/404.html'];
 // Stand-ins for Google (docs.google.com / googleapis.com aren't reachable from CI/sandboxes).
 // The points sheet is disconnected by default; tests that need it set a URL + serve this CSV.
 const MOCK_SHEET = 'Name,Meetings,Problems,Contests,Total\n"Ava M.",5,12,10,27\n"Liam C.",4,9,5,18\n"Isabella G.",5,7,5,17\n"Noah J.",1,0,0,1\n';
@@ -92,7 +92,7 @@ for (const width of [360, 768, 1440, 2560]) {
 
 console.log('\nPhotos');
 {
-  for (const path of ['/getting-started/', '/slides/', '/calendar/', '/points/']) {
+  for (const path of ['/learn-java/', '/slides/', '/calendar/', '/points/']) {
     const { page, ctx } = await open(path);
     const img = page.locator('.hero-photo img');
     ok((await img.count()) === 1 && (await img.getAttribute('alt')).length > 20 && (await img.evaluate((i) => i.complete && i.naturalWidth > 0)), `${path}: header photo loads with alt text`);
@@ -122,7 +122,8 @@ console.log('\nPoints (no sheet connected)');
 }
 {
   const { page, ctx } = await open('/');
-  ok(await page.locator('[data-teaser-soon]').isVisible() && (await page.locator('[data-teaser-live]').isHidden()), 'Home teaser links to "How points work"');
+  ok((await page.locator('#points-title').count()) === 0 && (await page.locator('.section-title', { hasText: 'Gallery' }).count()) === 1, 'Home: no Points section; "Gallery" heading');
+  ok((await page.locator('.feature .icon-tile').count()) === 0, 'Home: "What we do" cards have no icons');
   await ctx.close();
 }
 
@@ -240,12 +241,13 @@ console.log('\nCalendar (schedule + FBISD + MSA)');
   const oct = page.locator('.day:not(.day--out)');
   const octMeetings = await oct.filter({ has: page.locator('.pill[data-type="meeting"]') }).allInnerTexts();
   ok(octMeetings.length === 2 && octMeetings[0].startsWith('19') && octMeetings[1].startsWith('26'), 'October: 10/12 (fall break) moved to 10/19; 10/26 regular');
-  ok(await oct.locator('.pill[data-type="msa"]').count() === 1 && (await oct.locator('.pill[data-type="social"]').count()) === 1, 'MSA meeting + Halloween Social shown');
+  ok(await oct.locator('.pill[data-type="msa"]').count() === 2 && (await page.locator('.pill[data-type="social"]').count()) === 0, 'MSA meeting + Halloween Social both shown as MSA events (purple)');
+  ok(!(await page.locator('[data-legend]').innerText()).includes('Social'), 'No separate "Social" type in the legend');
   ok((await page.locator('.cal-shell').innerText()).includes('Digital Design') === false, 'Other clubs ignored');
   await oct.filter({ has: page.locator('.pill[data-type="meeting"]') }).first().locator('.pill[data-type="meeting"]').click();
   ok((await page.locator('dialog.modal').innerText()).includes('Moved from Mon, Oct 12 (Fall Break)'), 'Moved meeting explains why');
   await page.keyboard.press('Escape');
-  await oct.locator('.pill[data-type="social"]').click();
+  await oct.locator('.pill[data-type="msa"]', { hasText: 'Halloween' }).click();
   ok(await page.locator('dialog.modal .event-detail__desc a[href="https://example.com/halloween"]').count() === 1, 'Description links made clickable');
   await page.keyboard.press('Escape');
 

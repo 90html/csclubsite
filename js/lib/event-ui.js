@@ -9,7 +9,6 @@ export const TYPE_COLORS = {
   meeting: 'var(--c-meeting)',
   contest: 'var(--c-contest)',
   workshop: 'var(--c-workshop)',
-  social: 'var(--c-social)',
   other: 'var(--c-other)',
   msa: 'var(--c-msa)',
   school: 'var(--c-school)',
@@ -25,6 +24,17 @@ const tzLabel = () => {
     return '';
   }
 };
+
+/** "3:00 – 3:45 PM – Mon, Sep 28" (time first) in the visitor's timezone. */
+export function formatTimeDate(ev) {
+  const day = (d) => fmt(d, { weekday: 'short', month: 'short', day: 'numeric' });
+  if (ev.allDay) return formatWhen(ev).replace(' · All day', '');
+  let start = formatTime(ev.start);
+  const end = formatTime(ev.end);
+  const period = / ?[AP]M$/i.exec(end)?.[0];
+  if (period && start.endsWith(period)) start = start.slice(0, -period.length); // "3:00 – 3:45 PM"
+  return sameDay(ev.start, ev.end) ? `${start} – ${end} – ${day(ev.start)}` : formatWhen(ev);
+}
 
 /** "Thu, Sep 24 · 4:15 – 5:15 PM" in the visitor's timezone. */
 export function formatWhen(ev, { withTz = false } = {}) {
@@ -44,9 +54,9 @@ export function openEventModal(ev, returnFocus) {
   const body = document.createElement('div');
   body.className = 'event-detail';
   body.innerHTML = `
-    <ul class="event-detail__facts" role="list">
-      <li>${icon('clock')}<span>${esc(formatWhen(ev, { withTz: true }))}</span></li>
-      ${ev.location ? `<li>${icon('pin')}<span>${esc(ev.location)}</span></li>` : ''}
+    <ul class="facts">
+      <li>${esc(formatTimeDate(ev))}${ev.allDay ? '' : ` ${esc(tzLabel())}`}</li>
+      ${ev.location ? `<li>${esc(ev.location)}</li>` : ''}
     </ul>
     <div class="event-detail__desc prose"></div>
     <div class="event-detail__actions">

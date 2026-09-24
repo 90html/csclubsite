@@ -2,7 +2,6 @@
  * in the browser (live from data/officers.json) and in tools/build.mjs
  * (pre-rendered HTML for search engines and no-JS visitors). */
 import { esc, hashIndex, initials, safeUrl } from '../core/utils.js';
-import { icon } from '../core/icons.js';
 
 function avatar(person, resolvePhoto) {
   const photo = person.photo ? safeUrl(resolvePhoto(person.photo)) : '';
@@ -49,7 +48,7 @@ export function renderSponsors(data, resolvePhoto = (p) => p) {
       <div>
         <h3 class="sponsor__name">${esc(s.name)}</h3>
         <p class="sponsor__role">${esc(s.role || 'Club Sponsor')}</p>
-        ${s.room ? `<p class="sponsor__room mono">${icon('pin')}<span>Room ${esc(String(s.room).replace(/^room\s*/i, ''))}</span></p>` : ''}
+        ${s.room ? `<p class="sponsor__room mono">Room ${esc(String(s.room).replace(/^room\s*/i, ''))}</p>` : ''}
       </div>
     </li>`,
     )

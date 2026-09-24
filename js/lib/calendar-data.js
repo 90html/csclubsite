@@ -31,8 +31,7 @@ export const RANGE = {
 const TYPES = {
   meeting: { id: 'meeting', label: 'Meeting' },
   school: { id: 'school', label: 'School' },
-  msa: { id: 'msa', label: 'MSA' },
-  social: { id: 'social', label: 'Social' },
+  msa: { id: 'msa', label: 'MSA event' },
   other: { id: 'other', label: 'Event' },
 };
 
@@ -51,9 +50,8 @@ function wordStart(keyword) {
 
 export const EVENT_TYPE_LEGEND = [
   TYPES.meeting,
-  ...(CAL.EVENT_TYPES || []).filter((t) => t.id !== 'meeting' && t.id !== 'social').map((t) => ({ id: t.id, label: t.label })),
-  TYPES.social,
-  { id: 'msa', label: 'MSA event' },
+  ...(CAL.EVENT_TYPES || []).filter((t) => t.id !== 'meeting').map((t) => ({ id: t.id, label: t.label })),
+  TYPES.msa,
   { id: 'school', label: 'School calendar' },
 ];
 
@@ -251,7 +249,7 @@ function loadYear() {
         blocksMeetings: Boolean(e.noSchool || e.noMeetings),
       }));
       const msaEvents = msaResult.items.filter(isMsaEvent).map((item) => {
-        const ev = normalize(item, /\bsocial/i.test(item.summary || '') ? TYPES.social : TYPES.msa);
+        const ev = normalize(item, TYPES.msa); // MSA meetings and socials alike
         ev.description ||= 'From the Dulles MSA master calendar.';
         return ev;
       });

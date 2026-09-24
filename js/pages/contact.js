@@ -13,7 +13,11 @@ document.querySelector('[data-email-ready]').hidden = !hasEmail;
 document.querySelector('[data-email-missing]').hidden = hasEmail;
 
 const copyBtn = document.querySelector('[data-copy-email]');
-if (hasEmail) copyBtn.querySelector('.copy-email__addr').textContent = email;
+if (hasEmail) {
+  // Allow a line break only after the "@" on narrow screens.
+  const [user, domain] = email.split('@');
+  copyBtn.querySelector('.copy-email__addr').replaceChildren(`${user}@`, document.createElement('wbr'), domain || '');
+}
 const label = copyBtn.querySelector('[data-copy-label]');
 const status = document.getElementById('copy-status');
 let resetTimer;

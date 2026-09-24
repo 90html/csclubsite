@@ -70,7 +70,7 @@ On GitHub you can edit files right in the browser: open the file and click the â
 | File | Paste on Weebly page |
 |---|---|
 | `1-home.html` | Home |
-| `2-getting-started.html` | Getting Started |
+| `2-learn-java.html` | Learn Java (new page, replaces Getting Started) |
 | `3-slides.html` | Slides (new page) |
 | `4-calendar.html` | Calendar (new page) |
 | `5-points.html` | Points (new page) |
@@ -89,7 +89,7 @@ Each file is self-contained: all CSS, JavaScript and data are inside it, and ima
 1. In the Weebly editor, open **Pages**.
 2. **Delete** the old pages: **Java Materials**, **Misc Links**, **Announcements** (the blog).
 3. **Add** three new Standard Pages: **Slides**, **Calendar**, **Points**. Check each page's URL in its page settings (for example `slides.html`) matches `WEEBLY_PAGE_URLS`.
-4. Put the pages in this order: Home, Getting Started, Slides, Calendar, Points, Officers, Contact Us.
+4. Put the pages in this order: Home, Learn Java, Slides, Calendar, Points, Officers, Contact Us.
 5. For each page, choose **Header type â†’ No Header** (or the smallest header) in the page settings, so the embed starts right below the menu.
 
 ### B3. Paste each page

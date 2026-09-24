@@ -5,7 +5,7 @@ A fast, dark-themed static website for the Dulles High School CS Club. It uses p
 | Page | What it does |
 |---|---|
 | **Home** | Hero, what we do, next meeting (live countdown), latest slides, points lookup, photo gallery (once photos are added) |
-| **Getting Started** | 4-step path, plus curated Java setup / learning / practice links |
+| **Learn Java** | Curated Java setup, learning and practice links |
 | **Slides** | One card per meeting. Cards unlock automatically after the meeting. Search, topic filter, sort |
 | **Calendar** | Custom month and agenda views over your Google Calendar, with event details, "Add to Google Calendar" and `.ics` download |
 | **Points** | Name search (typo-tolerant), animated result card, rank, sortable leaderboard. Data comes from a Google Sheet |
