@@ -98,6 +98,7 @@ console.log('\nPoints (no sheet connected)');
   ok(await page.locator('[data-points-live]').first().isHidden() && (await page.locator('.board tbody tr').count()) === 0, 'No search, no leaderboard, no names');
   ok(sheetRequests === 0, 'No request to Google Sheets');
   ok((await page.locator('.rule').count()) === 7 && (await page.locator('.goal-card').innerText()).includes('7'), 'Rules + 7-point EOS goal shown');
+  ok((await page.locator('.rule a[data-social="discord"]').getAttribute('href')).startsWith('https://discord.gg/') && (await page.locator('.rule a[data-social="instagram"]').getAttribute('href')).includes('instagram.com/dullescompsci'), 'Rules link to Discord + Instagram');
   ok(!errors.length, 'No console errors');
   await ctx.close();
 }
@@ -303,6 +304,8 @@ console.log('\nNav, contact, officers');
   ok(meet.includes('Every other Monday') && meet.includes('3:00') && meet.includes('B105'), 'Meeting schedule, time and room shown');
   const sponsors = await page.locator('[data-sponsor-list]').innerText();
   ok(sponsors.includes('Mr. Rogers · Room B105') && sponsors.includes('Coach Garrett') && !sponsors.includes('A-105'), 'Sponsor rooms (no A-105 for now)');
+  ok((await page.locator('main a[data-social="discord"]').getAttribute('href')) === 'https://discord.gg/YZTBQjdD6J' && (await page.locator('main a[data-social="instagram"]').isVisible()), 'Discord + Instagram links shown');
+  ok(await page.locator('footer a[data-social="discord"]').isVisible() && (await page.locator('footer a[data-social="github"]').isHidden()), 'Footer socials (GitHub hidden, not set)');
   await ctx.close();
 }
 {

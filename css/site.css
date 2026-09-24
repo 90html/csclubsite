@@ -1346,6 +1346,9 @@ body.drawer-open {
   text-decoration: none;
   color: var(--link);
 }
+.step__link + .step__link {
+  margin-left: var(--s-4);
+}
 .step__link:hover {
   color: var(--link-hover);
 }

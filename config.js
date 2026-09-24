@@ -29,13 +29,11 @@ const CONFIG = {
   /* Remind class code. Leave '' to hide it. */
   REMIND_CODE: '@dhscs27',
 
-  /* Social links. Leave a value as '' to hide that icon everywhere.
-   * (An Instagram account named @dhscompsci exists, but it wasn't linked from
-   * the old site, so it's left off until you confirm it's the club's.) */
+  /* Social links. Leave a value as '' to hide it everywhere. */
   SOCIAL: {
-    instagram: '', // e.g. 'https://www.instagram.com/dhscompsci/'
-    github: '',    // e.g. 'https://github.com/dullescompsci'
-    discord: '',   // e.g. 'https://discord.gg/xxxxxxx'
+    instagram: 'https://www.instagram.com/dullescompsci/',
+    discord: 'https://discord.gg/YZTBQjdD6J',
+    github: '',
   },
 
   /* ---------------------------------------------------------------------------
