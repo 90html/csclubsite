@@ -23,6 +23,7 @@ const WITH_SHEET = "CONFIG.POINTS.POINTS_SHEET_URL = 'https://docs.google.com/sp
 const MSA_ITEMS = [
   { id: 'm1', summary: 'MSA Monthly Meeting', start: { date: '2026-10-05' }, end: { date: '2026-10-06' } },
   { id: 'm2', summary: 'MSA Monthly Meeting', start: { date: '2026-11-09' }, end: { date: '2026-11-10' } },
+  { id: 'm6', summary: 'MSA Monthly Meeting', start: { date: '2026-12-07' }, end: { date: '2026-12-08' } },
   { id: 'm3', summary: 'Halloween Social', description: 'Costumes! Details: https://example.com/halloween', start: { date: '2026-10-22' }, end: { date: '2026-10-23' } },
   { id: 'm4', summary: 'Digital Design Club: Session 1', start: { dateTime: '2026-10-23T15:00:00-05:00' }, end: { dateTime: '2026-10-23T16:00:00-05:00' } },
   { id: 'm5', summary: 'No School', start: { date: '2026-10-09' }, end: { date: '2026-10-10' } },
@@ -233,7 +234,14 @@ console.log('\nCalendar (schedule + FBISD + MSA)');
   const nov = await page.locator('.day:not(.day--out)').filter({ has: page.locator('.pill[data-type="meeting"]') }).allInnerTexts();
   ok(nov.length === 2 && nov[0].startsWith('16') && nov[1].startsWith('30'), 'November: MSA 11/9 → 11/16, Thanksgiving 11/23 → 11/30');
   await page.locator('[data-cal-next]').click();
-  ok((await page.locator('.cal-shell').innerText()).includes('No club meeting'), 'December: winter-break meeting shown as canceled');
+  const decText = await page.locator('.cal-shell').innerText();
+  ok(!decText.includes('No club meeting'), 'December: no "No club meeting" entries');
+  const dec = await page.locator('.day:not(.day--out)').filter({ has: page.locator('.pill[data-type="meeting"]') }).allInnerTexts();
+  ok(dec.length === 1 && dec[0].startsWith('14') && dec[0].includes('Pizza Party'), 'December: 12/14 is the fall pizza party; nothing over winter break');
+  for (let i = 0; i < 5; i++) await page.locator('[data-cal-next]').click();
+  const may = await page.locator('.day:not(.day--out)').filter({ has: page.locator('.pill[data-type="meeting"]') }).allInnerTexts();
+  ok(may.length === 1 && may[0].startsWith('10') && may[0].includes('Pizza Party'), 'May: 5/10 is the spring pizza party; no meeting in finals week');
+  for (let i = 0; i < 5; i++) await page.locator('[data-cal-prev]').click();
 
   await page.locator('#tab-agenda').click();
   ok(await page.locator('.agenda-item').count() > 0, 'Agenda view');

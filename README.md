@@ -53,13 +53,19 @@ The Calendar page, the "Next meeting" countdown and the Home "Next up" strip com
 | **School calendar:** FBISD holidays, breaks, exams | `data/school-calendar.json` (**update every school year**) |
 | **MSA events:** MSA meetings and socials | the MSA master calendar (`CALENDAR.MSA_CALENDAR_ID`) |
 
-**Meeting rules:** a club meeting that lands on a no-school day, or on a day with an MSA meeting or social, moves to the next Monday. If that Monday is blocked too (or is already a meeting), it's canceled and shown as "No club meeting". Other clubs' events on the MSA calendar are ignored (`CALENDAR.MSA_IGNORE`). Only August 2026 to May 2027 can be viewed (`CALENDAR.RANGE`).
+**Meeting rules:**
+- A club meeting that lands on a no-school day, an exam week, or a day with an MSA meeting or social moves to the next Monday. If that Monday is blocked too (or is already a meeting), the meeting is skipped.
+- The **last meeting of each semester** (`semesters` in `data/school-calendar.json`) becomes the **End-of-Semester Pizza Party**. With this year's calendar, that's Dec 14 and May 10.
+- Other clubs' events on the MSA calendar are ignored (`CALENDAR.MSA_IGNORE`).
+- Only August 2026 to May 2027 can be viewed (`CALENDAR.RANGE`).
 
 **To change the schedule:** edit `MEETING.SCHEDULE.firstMeeting` (any meeting date in the pattern) and `everyWeeks`. Add one-off meetings to `extraMeetings`.
 
 **API key:** the key in `CALENDAR.CALENDAR_API_KEY` is a browser key, so anyone can see it in the page source. Lock it down in Google Cloud Console → **APIs & Services → Credentials** → the key:
 - **Application restrictions → Websites:** add `https://90html.github.io/*` (plus your custom domain and `http://localhost:8080/*` for testing).
 - **API restrictions → Restrict key → Google Calendar API.**
+
+If MSA events stop showing, the Calendar page displays "The MSA calendar couldn't be loaded". That almost always means the website restriction doesn't match the site's address.
 
 **If the club makes its own Google Calendar later:** make it public, then paste its Calendar ID (Calendar settings → Integrate calendar) into `CALENDAR.CALENDAR_ID`. Club events then come from it instead of the schedule, with colors picked by keywords in `CALENDAR.EVENT_TYPES`.
 

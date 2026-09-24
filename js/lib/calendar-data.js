@@ -4,8 +4,9 @@
  *   2. School days: FBISD holidays, breaks and exams (data/school-calendar.json).
  *   3. MSA events: MSA meetings and socials from the MSA master calendar
  *      (Google Calendar API v3). Other clubs' events there are ignored.
- * A meeting that lands on a no-school day or an MSA event day moves to the
- * next Monday, or is canceled if that day is blocked too. */
+ * A meeting that lands on a no-school day, an exam week or an MSA event day
+ * moves to the next Monday, or is skipped if that day is blocked too. The last
+ * meeting of each semester is the end-of-semester pizza party. */
 import CONFIG from '../../config.js';
 import { cache, loadData } from '../core/site.js';
 import { addDays, isPlaceholder, parseLocalDate, startOfDay, zonedTime } from '../core/utils.js';
@@ -29,7 +30,6 @@ export const RANGE = {
 
 const TYPES = {
   meeting: { id: 'meeting', label: 'Meeting' },
-  canceled: { id: 'other', label: 'Canceled' },
   school: { id: 'school', label: 'School' },
   msa: { id: 'msa', label: 'MSA' },
   social: { id: 'social', label: 'Social' },
@@ -55,14 +55,13 @@ export const EVENT_TYPE_LEGEND = [
   TYPES.social,
   { id: 'msa', label: 'MSA event' },
   { id: 'school', label: 'School calendar' },
-  { id: 'other', label: 'Canceled / other' },
 ];
 
 /** Notice shown above the calendar (HTML). */
 export function sourceNote() {
   if (SOURCE === 'google') return '';
   const when = [CONFIG.MEETING.day, CONFIG.MEETING.time, CONFIG.MEETING.room].filter((v) => !isPlaceholder(v)).join(', ');
-  return `<strong>Club meetings: ${when}.</strong> When school is out or MSA has an event that day, the meeting moves to the next Monday. School holidays come from the FBISD 2026–27 calendar${HAS_MSA ? ' and MSA events from the MSA master calendar' : ''}.`;
+  return `<strong>Club meetings: ${when}.</strong> When school is out or MSA has an event that day, the meeting moves to the next Monday. The last meeting of each semester is a pizza party! School holidays come from the FBISD 2026–27 calendar${HAS_MSA ? ' and MSA events from the MSA master calendar' : ''}.`;
 }
 
 /* ---------------- Helpers ---------------- */
@@ -162,36 +161,48 @@ function meetingEvent(date, extra = {}) {
   };
 }
 
-/** @param {Map<string,string>} blocked day → reason  @param {string} lastDay YYYY-MM-DD */
-function scheduleMeetings(blocked, lastDay) {
+/**
+ * @param {Map<string,string>} blocked day → reason
+ * @param {string} lastDay YYYY-MM-DD
+ * @param {{ start: string, end: string }[]} semesters
+ */
+function scheduleMeetings(blocked, lastDay, semesters) {
   if (!HAS_SCHEDULE) return [];
   const regular = [];
   for (let d = SCHEDULE.firstMeeting; d <= lastDay; d = addDaysYmd(d, 7 * SCHEDULE.everyWeeks)) regular.push(d);
   const regularSet = new Set(regular);
-  const out = (SCHEDULE.extraMeetings || []).filter((d) => !regularSet.has(d)).map((d) => meetingEvent(d));
+  const out = (SCHEDULE.extraMeetings || []).filter((d) => !regularSet.has(d)).map((d) => ({ date: d }));
   for (const d of regular) {
     const reason = blocked.get(d);
     if (!reason) {
-      out.push(meetingEvent(d));
+      out.push({ date: d });
       continue;
     }
+    // Blocked: try the next Monday; if that's blocked too, skip this meeting.
     const next = addDaysYmd(d, 7);
-    if (next <= lastDay && !blocked.has(next) && !regularSet.has(next)) {
-      out.push(meetingEvent(next, { description: `Moved from ${prettyDay(d)} (${reason}). Everyone is welcome!` }));
-    } else {
-      out.push(
-        meetingEvent(d, {
-          id: `canceled-${d}`,
-          title: 'No club meeting',
-          description: `Canceled: ${reason}.${next <= lastDay && blocked.has(next) ? ` The next Monday is out too (${blocked.get(next)}).` : ''}`,
-          location: '',
-          type: TYPES.canceled,
-          canceled: true,
-        }),
-      );
-    }
+    if (next <= lastDay && !blocked.has(next) && !regularSet.has(next)) out.push({ date: next, movedFrom: d, reason });
   }
-  return out;
+  out.sort((a, b) => (a.date < b.date ? -1 : 1));
+
+  // The last meeting of each semester is the pizza party.
+  const party = new Set();
+  for (const sem of semesters) {
+    const inSem = out.filter((m) => m.date >= sem.start && m.date <= sem.end);
+    if (inSem.length) party.add(inSem[inSem.length - 1].date);
+  }
+  const goal = Number(CONFIG.POINTS?.EOS_GOAL) || 0;
+  return out.map((m) => {
+    const extra = {};
+    if (party.has(m.date)) {
+      extra.title = 'End-of-Semester Pizza Party';
+      extra.description = `Last meeting of the semester: pizza party!${goal ? ` You need ${goal} points this semester to attend.` : ''}`;
+    }
+    if (m.movedFrom) {
+      const moved = `Moved from ${prettyDay(m.movedFrom)} (${m.reason}).`;
+      extra.description = extra.description ? `${extra.description} ${moved}` : `${moved} Everyone is welcome!`;
+    }
+    return meetingEvent(m.date, extra);
+  });
 }
 
 /* ---------------- The whole school year, loaded once ---------------- */
@@ -217,7 +228,7 @@ function loadYear() {
         end: addDays(parseLocalDate(e.end || e.start), 1),
         allDay: true,
         type: TYPES.school,
-        noSchool: Boolean(e.noSchool),
+        blocksMeetings: Boolean(e.noSchool || e.noMeetings),
       }));
       const msaEvents = msaResult.items.filter(isMsaEvent).map((item) => {
         const ev = normalize(item, /\bsocial/i.test(item.summary || '') ? TYPES.social : TYPES.msa);
@@ -227,14 +238,14 @@ function loadYear() {
 
       // Days that block a club meeting, with the reason.
       const blocked = new Map();
-      for (const ev of schoolEvents) if (ev.noSchool) for (const d of daysOf(ev)) blocked.set(d, ev.title);
+      for (const ev of schoolEvents) if (ev.blocksMeetings) for (const d of daysOf(ev)) blocked.set(d, ev.title);
       for (const ev of msaEvents) for (const d of daysOf(ev)) if (!blocked.has(d)) blocked.set(d, ev.title);
 
       const lastDay = school.lastDay || ymdLocal(RANGE.end);
       const club =
         SOURCE === 'google'
           ? (await fetchGoogle(CAL.CALENDAR_ID, yearStart, yearEnd)).map((item) => normalize(item))
-          : scheduleMeetings(blocked, lastDay);
+          : scheduleMeetings(blocked, lastDay, school.semesters || []);
 
       const events = [...club, ...msaEvents, ...schoolEvents].sort((a, b) => a.start - b.start || a.end - b.end);
       return { events, msaError: msaResult.error || null };
@@ -264,7 +275,7 @@ export async function getUpcoming() {
   return { events: events.filter((e) => e.end > now) };
 }
 
-/** The next club meeting (skips canceled ones and non-club events). */
+/** The next club meeting (ignores school and MSA events). */
 export function pickNextMeeting(events) {
-  return events.find((e) => e.type.id === 'meeting' && !e.canceled) || null;
+  return events.find((e) => e.type.id === 'meeting') || null;
 }
