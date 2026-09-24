@@ -107,10 +107,12 @@
         <p data-banner-text><strong>Club meetings: Every other Monday, 3:00 – 3:45 PM, Room B105.</strong> When school is out or MSA has an event that day, the meeting moves to the next Monday. The last meeting of each semester is a pizza party! School holidays come from the FBISD 2026–27 calendar and MSA events from the MSA master calendar.</p>
       </div>
 
-      <p class="demo-banner demo-banner--spaced" data-msa-error hidden>
+      <div class="demo-banner demo-banner--spaced" data-msa-error hidden>
         <svg data-icon="alert" class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M12 3.5 2.5 20h19L12 3.5Z"/><path d="M12 10v4.5M12 17.5v.01"/></svg>
-        <span>The MSA calendar couldn't be loaded right now, so MSA events aren't shown and meeting dates don't account for them.</span>
-      </p>
+        <p>The MSA calendar couldn't be loaded, so MSA events aren't shown and meeting dates don't account for them.
+          <span class="msa-detail" data-msa-detail></span>
+          <button type="button" class="btn btn--ghost btn--sm" data-msa-retry><svg data-icon="refresh" class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M20 11a8 8 0 0 0-14.3-4.9L4 8M4 3.5V8h4.5M4 13a8 8 0 0 0 14.3 4.9L20 16M20 20.5V16h-4.5"/></svg>Retry</button></p>
+      </div>
 
       <div class="cal-toolbar">
         <h2 data-cal-title aria-live="polite">Calendar</h2>

@@ -267,12 +267,27 @@ console.log('\nCalendar (schedule + FBISD + MSA)');
   await ctx.close();
 }
 {
+  let fail = true;
+  let referer = '';
   const { page, ctx } = await open('/calendar/', {
     time: '2026-09-24T15:00:00Z',
-    routes: { 'https://www.googleapis.com/**': (r) => r.fulfill({ status: 403, body: '{}', headers: { 'access-control-allow-origin': '*' } }) },
+    routes: {
+      'https://www.googleapis.com/**': (r) => {
+        referer = r.request().headers().referer || '';
+        return fail
+          ? r.fulfill({ status: 403, contentType: 'application/json', headers: { 'access-control-allow-origin': '*' }, body: JSON.stringify({ error: { message: 'Requests from referer <empty> are blocked.' } }) })
+          : msaRoute(r);
+      },
+    },
   });
+  ok(referer === `${BASE}/`, 'Sends only the site origin as referrer (for the key restriction)');
   ok(await page.locator('[data-msa-error]').isVisible(), 'MSA calendar failure: notice shown');
+  ok((await page.locator('[data-msa-detail]').innerText()).includes('Requests from referer <empty> are blocked.'), "Notice shows Google's reason");
   ok((await page.locator('.next-card h2').innerText()) === 'Club Meeting', 'Meetings still shown without MSA data');
+  fail = false;
+  await page.locator('[data-msa-retry]').click();
+  await page.waitForTimeout(500);
+  ok(await page.locator('[data-msa-error]').isHidden(), 'Retry recovers once Google allows the request');
   await ctx.close();
 }
 {

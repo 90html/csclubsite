@@ -106,18 +106,23 @@ async function fetchGoogle(calendarId, timeMin, timeMax) {
     const url = `https://www.googleapis.com/calendar/v3/calendars/${encodeURIComponent(calendarId)}/events?${params}`;
     let res;
     try {
-      res = await fetch(url);
+      // The API key is restricted to our website, and Google checks it via the
+      // Referer header; always send our origin (never the full URL).
+      res = await fetch(url, { referrerPolicy: 'origin' });
     } catch {
       throw new Error('Couldn’t reach Google Calendar. Check your connection and try again.');
     }
     if (!res.ok) {
-      throw new Error(
+      const google = await res.json().then((j) => j?.error?.message || '', () => '');
+      const error = new Error(
         res.status === 404
           ? 'The calendar wasn’t found. Is it public, and is the Calendar ID right?'
           : res.status === 403 || res.status === 400
             ? 'Google refused the request. Check the API key and its website restrictions.'
             : `Google Calendar returned an error (${res.status}).`,
       );
+      error.detail = google;
+      throw error;
     }
     const json = await res.json();
     items.push(...(json.items || []).filter((i) => i.status !== 'cancelled'));
@@ -256,6 +261,11 @@ function loadYear() {
     });
   }
   return yearPromise;
+}
+
+/** Forget loaded data so the next request fetches everything again (Retry). */
+export function resetCalendarData() {
+  yearPromise = undefined;
 }
 
 /**

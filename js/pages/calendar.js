@@ -3,7 +3,7 @@ import { initApp } from '../core/app.js';
 import { icon } from '../core/icons.js';
 import { openModal } from '../core/modal.js';
 import { addDays, esc, fmt, formatTime, sameDay, startOfDay } from '../core/utils.js';
-import { EVENT_TYPE_LEGEND, getEvents, getUpcoming, pickNextMeeting, RANGE, SOURCE, sourceNote } from '../lib/calendar-data.js';
+import { EVENT_TYPE_LEGEND, getEvents, getUpcoming, pickNextMeeting, RANGE, resetCalendarData, SOURCE, sourceNote } from '../lib/calendar-data.js';
 import { countdownMarkup, formatWhen, openEventModal, startCountdown } from '../lib/event-ui.js';
 
 initApp();
@@ -120,7 +120,7 @@ async function load() {
       const start = gridStart(state.month);
       const { events, msaError } = await getEvents(start, addDays(start, 42));
       monthCache.set(key, events);
-      msaNote.hidden = !msaError;
+      showMsaError(msaError);
     } catch (err) {
       if (token !== loadToken) return;
       panel.removeAttribute('aria-busy');
@@ -189,6 +189,20 @@ function shiftMonth(delta) {
 const prevBtn = document.querySelector('[data-cal-prev]');
 const nextBtn = document.querySelector('[data-cal-next]');
 const msaNote = document.querySelector('[data-msa-error]');
+/** Show why the MSA calendar failed (Google's own message helps with key setup). */
+function showMsaError(error) {
+  msaNote.hidden = !error;
+  if (!error) return;
+  msaNote.querySelector('[data-msa-detail]').textContent = error.detail
+    ? `Google says: "${error.detail}"`
+    : error.message;
+}
+msaNote.querySelector('[data-msa-retry]').addEventListener('click', () => {
+  resetCalendarData();
+  monthCache.clear();
+  load();
+  renderNext();
+});
 prevBtn.addEventListener('click', () => shiftMonth(-1));
 nextBtn.addEventListener('click', () => shiftMonth(1));
 document.querySelector('[data-cal-today]').addEventListener('click', () => {

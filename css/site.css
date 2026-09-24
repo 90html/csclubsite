@@ -665,6 +665,13 @@ body.drawer-open {
   color: #f5dfa6;
   font-size: var(--fs-sm);
 }
+.msa-detail {
+  display: block;
+  margin: var(--s-2) 0;
+  font-family: var(--font-mono);
+  font-size: var(--fs-xs);
+  overflow-wrap: anywhere;
+}
 .demo-banner--info {
   border-style: solid;
   border-color: var(--border-strong);
