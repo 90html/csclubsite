@@ -9,7 +9,8 @@
     "build": "node tools/build.mjs",
     "images": "node tools/images.mjs",
     "brand": "node tools/brand.mjs",
-    "test": "node tools/test.mjs"
+    "test": "node tools/test.mjs",
+    "msa": "node tools/fetch-msa.mjs"
   },
   "devDependencies": {
     "esbuild": "^0.28.2",

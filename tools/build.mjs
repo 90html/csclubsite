@@ -143,6 +143,7 @@ const data = {
   'officers.json': officers,
   'gallery.json': JSON.parse(await read('data/gallery.json')),
   'school-calendar.json': JSON.parse(await read('data/school-calendar.json')),
+  'msa-events.json': JSON.parse(await read('data/msa-events.json').catch(() => '{"items":[]}')),
 };
 
 const pageByPath = new Map(PAGES.map((p) => [`/${p.path}`, p]));

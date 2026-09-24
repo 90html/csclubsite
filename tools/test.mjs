@@ -267,20 +267,36 @@ console.log('\nCalendar (schedule + FBISD + MSA)');
   await ctx.close();
 }
 {
-  let fail = true;
   let referer = '';
   const { page, ctx } = await open('/calendar/', {
     time: '2026-09-24T15:00:00Z',
     routes: {
       'https://www.googleapis.com/**': (r) => {
         referer = r.request().headers().referer || '';
-        return fail
-          ? r.fulfill({ status: 403, contentType: 'application/json', headers: { 'access-control-allow-origin': '*' }, body: JSON.stringify({ error: { message: 'Requests from referer <empty> are blocked.' } }) })
-          : msaRoute(r);
+        return r.fulfill({ status: 403, contentType: 'application/json', headers: { 'access-control-allow-origin': '*' }, body: JSON.stringify({ error: { message: 'Requests from referer https://www.googleapis.com/ are blocked.' } }) });
       },
     },
   });
   ok(referer === `${BASE}/`, 'Sends only the site origin as referrer (for the key restriction)');
+  ok(await page.locator('[data-msa-error]').isHidden(), 'Google refused → falls back to the saved MSA copy (no error)');
+  for (let i = 0; i < 3; i++) await page.locator('[data-cal-next]').click();
+  const decSaved = await page.locator('.day:not(.day--out)').filter({ has: page.locator('.pill[data-type="meeting"]') }).allInnerTexts();
+  ok(decSaved.length === 1 && decSaved[0].startsWith('14') && (await page.locator('.pill[data-type="msa"]').count()) >= 1, 'Saved copy: MSA 12/7 shown, pizza party moved to 12/14');
+  await ctx.close();
+}
+{
+  // Google refused AND no saved copy: show the reason + Retry.
+  let fail = true;
+  const { page, ctx } = await open('/calendar/', {
+    time: '2026-09-24T15:00:00Z',
+    routes: {
+      '**/data/msa-events.json': (r) => (fail ? r.fulfill({ status: 404, body: 'nf' }) : r.continue()),
+      'https://www.googleapis.com/**': (r) =>
+        fail
+          ? r.fulfill({ status: 403, contentType: 'application/json', headers: { 'access-control-allow-origin': '*' }, body: JSON.stringify({ error: { message: 'Requests from referer <empty> are blocked.' } }) })
+          : msaRoute(r),
+    },
+  });
   ok(await page.locator('[data-msa-error]').isVisible(), 'MSA calendar failure: notice shown');
   ok((await page.locator('[data-msa-detail]').innerText()).includes('Requests from referer <empty> are blocked.'), "Notice shows Google's reason");
   ok((await page.locator('.next-card h2').innerText()) === 'Club Meeting', 'Meetings still shown without MSA data');

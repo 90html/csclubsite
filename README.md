@@ -65,7 +65,7 @@ The Calendar page, the "Next meeting" countdown and the Home "Next up" strip com
 - **Application restrictions → Websites:** add `https://90html.github.io/*` (plus your custom domain and `http://localhost:8080/*` for testing).
 - **API restrictions → Restrict key → Google Calendar API.**
 
-If MSA events stop showing, the Calendar page displays "The MSA calendar couldn't be loaded". That almost always means the website restriction doesn't match the site's address.
+**Saved copy of the MSA calendar:** some browsers hide or rewrite the page address Google uses to check the key (privacy settings, some extensions, some school-managed devices), and Google then refuses. For those visitors the site uses `data/msa-events.json`, a saved copy that the GitHub Action in `.github/workflows/msa-calendar.yml` refreshes every 6 hours. You can also refresh it by hand: on GitHub, go to **Actions → Refresh MSA calendar → Run workflow**, or run `npm run msa`. The page shows "The MSA calendar couldn't be loaded" only if both the live request and the saved copy fail.
 
 **If the club makes its own Google Calendar later:** make it public, then paste its Calendar ID (Calendar settings → Integrate calendar) into `CALENDAR.CALENDAR_ID`. Club events then come from it instead of the schedule, with colors picked by keywords in `CALENDAR.EVENT_TYPES`.
 
@@ -139,6 +139,7 @@ npm run build      # sync header/footer/<head> across pages, pre-render officers
 npm test           # end-to-end checks in headless Chrome
 npm run images     # optimize gallery photos + slide covers
 npm run brand      # regenerate favicons + social share image
+npm run msa        # refresh data/msa-events.json (saved copy of the MSA calendar)
 ```
 
 ```

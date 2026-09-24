@@ -210,6 +210,23 @@ function scheduleMeetings(blocked, lastDay, semesters) {
   });
 }
 
+/** MSA events: live from Google, or the saved copy (data/msa-events.json,
+ *  refreshed every 6 hours by a GitHub Action) when the browser's request is
+ *  refused, e.g. by privacy settings that hide or rewrite the page address. */
+async function loadMsa(timeMin, timeMax) {
+  try {
+    return { items: await fetchGoogle(CAL.MSA_CALENDAR_ID, timeMin, timeMax) };
+  } catch (error) {
+    try {
+      const saved = await loadData('msa-events.json');
+      if (Array.isArray(saved.items) && saved.items.length) return { items: saved.items };
+    } catch {
+      /* no saved copy either */
+    }
+    return { items: [], error };
+  }
+}
+
 /* ---------------- The whole school year, loaded once ---------------- */
 let yearPromise;
 function loadYear() {
@@ -219,9 +236,7 @@ function loadYear() {
       const yearEnd = addDays(RANGE.end, 1);
       const [school, msaResult] = await Promise.all([
         loadData('school-calendar.json').catch(() => ({ events: [] })),
-        HAS_MSA
-          ? fetchGoogle(CAL.MSA_CALENDAR_ID, yearStart, yearEnd).then((items) => ({ items }), (error) => ({ items: [], error }))
-          : { items: [] },
+        HAS_MSA ? loadMsa(yearStart, yearEnd) : { items: [] },
       ]);
 
       const schoolEvents = (school.events || []).map((e, i) => ({
