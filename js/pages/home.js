@@ -1,76 +1,14 @@
-/* Home: terminal typing, next meeting strip, latest slides, gallery, points teaser. */
-import CONFIG from '../../config.js';
+/* Home: next meeting strip, latest slides, points teaser. */
 import { initApp, observeReveal } from '../core/app.js';
-import { loadData } from '../core/site.js';
 import { icon } from '../core/icons.js';
-import { esc, isPlaceholder, prefersReducedMotion } from '../core/utils.js';
+import { esc } from '../core/utils.js';
 import { getUpcoming, pickNextMeeting } from '../lib/calendar-data.js';
 import { countdownMarkup, formatWhen, openEventModal, startCountdown } from '../lib/event-ui.js';
 import { HAS_SHEET } from '../lib/points-data.js';
 import { loadSlides } from '../lib/slides-data.js';
-import { enableCardFx, latestOpenId, numberSlides, slideCard, slideSkeletons } from '../lib/slide-card.js';
+import { latestOpenId, numberSlides, slideCard, slideSkeletons } from '../lib/slide-card.js';
 
 initApp();
-
-/* ---------- Terminal: re-type the pre-rendered snippet ----------
- * The full snippet stays in place (invisible) to hold the size, and the text is
- * typed into an overlay on top, so nothing ever shifts. */
-function typeTerminal() {
-  const pre = document.querySelector('[data-terminal]');
-  if (!pre || prefersReducedMotion()) return;
-  const runs = [...pre.childNodes].map((n) => [n.nodeType === 1 ? n.className : '', n.textContent]);
-  const ghost = document.createElement('span');
-  ghost.className = 'terminal__ghost';
-  ghost.append(...pre.childNodes);
-  const layer = document.createElement('span');
-  layer.className = 'terminal__typed';
-  const caret = document.createElement('span');
-  caret.className = 'caret';
-  layer.append(caret);
-  pre.append(ghost, layer);
-
-  let r = 0;
-  let i = 0;
-  let target = null;
-  const step = () => {
-    if (r >= runs.length) return;
-    const [cls, text] = runs[r];
-    if (!target) {
-      target = cls ? Object.assign(document.createElement('span'), { className: cls }) : document.createTextNode('');
-      layer.insertBefore(target, caret);
-    }
-    // Program output appears a line at a time; code types character by character.
-    const chunk = cls === 'o' ? text.length : 1;
-    target.textContent += text.slice(i, i + chunk);
-    i += chunk;
-    const ch = text[i - 1];
-    if (i >= text.length) {
-      r++;
-      i = 0;
-      target = null;
-    }
-    const delay = cls === 'o' ? 260 : ch === '\n' ? 90 : 18 + Math.random() * 28;
-    setTimeout(step, delay);
-  };
-  setTimeout(step, 500);
-}
-
-/* ---------- Stats that depend on data/config ---------- */
-async function fillStats() {
-  const meeting = document.querySelector('[data-stat-meeting]');
-  if (meeting && !isPlaceholder(CONFIG.MEETING.day)) {
-    meeting.querySelector('dt').textContent = isPlaceholder(CONFIG.MEETING.room) ? 'We meet' : `We meet · ${CONFIG.MEETING.room}`;
-    meeting.querySelector('dd').textContent = CONFIG.MEETING.day;
-  }
-  try {
-    const officers = await loadData('officers.json');
-    const count = (officers.groups || []).reduce((n, g) => n + (g.members || []).length, 0);
-    const el = document.querySelector('[data-officer-count]');
-    if (el && count) el.textContent = String(count);
-  } catch {
-    /* keep the pre-rendered number */
-  }
-}
 
 /* ---------- Next meeting strip ---------- */
 async function renderUpcoming() {
@@ -131,7 +69,6 @@ async function renderSlides() {
     grid.innerHTML = (pick.length ? pick : slides.slice(-3))
       .map((s) => slideCard(s, { number: num(s), latest: s.id === latest }))
       .join('');
-    enableCardFx(grid);
     observeReveal(grid);
   } catch {
     grid.innerHTML = `<div class="card state state--error state--full">${icon('alert')}<h3>Couldn't load slides</h3><p>Try refreshing the page.</p></div>`;
@@ -158,8 +95,6 @@ function initTeaser() {
   });
 }
 
-typeTerminal();
-fillStats();
 renderUpcoming();
 renderSlides();
 initTeaser();

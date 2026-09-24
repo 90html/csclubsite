@@ -4,7 +4,7 @@ import { icon } from '../core/icons.js';
 import { debounce, esc } from '../core/utils.js';
 import { normalize } from '../lib/fuzzy.js';
 import { loadSlides, slideState } from '../lib/slides-data.js';
-import { enableCardFx, latestOpenId, numberSlides, slideCard, slideSkeletons } from '../lib/slide-card.js';
+import { latestOpenId, numberSlides, slideCard, slideSkeletons } from '../lib/slide-card.js';
 
 initApp();
 
@@ -94,7 +94,6 @@ grid.addEventListener('click', (e) => {
   if (e.target.closest('[data-reset]')) reset();
   if (e.target.closest('[data-retry]')) init();
 });
-enableCardFx(grid);
 
 // Re-check lock states every minute, so cards unlock while the page is open.
 const signature = () => state.slides.map((s) => slideState(s)).join();

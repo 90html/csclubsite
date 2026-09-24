@@ -2,28 +2,28 @@
   "_README": "Club photos. Drop originals in assets/images/originals/ and run `npm run images` (makes WebP sizes + updates this file, keeping alt/caption/inGallery/focus), then `npm run build`. Pages show a photo via <figure data-photo=\"id\">. \"inGallery\": true photos appear in the Home \"Moments\" gallery, in this order. \"focus\" is where to keep in view when cropped (CSS object-position).",
   "photos": [
     {
-      "id": "i-love-cs",
-      "src": "assets/images/photos/i-love-cs-960.webp",
+      "id": "general-info-presentation",
+      "src": "assets/images/photos/general-info-presentation-960.webp",
       "srcset": [
         {
-          "src": "assets/images/photos/i-love-cs-480.webp",
+          "src": "assets/images/photos/general-info-presentation-480.webp",
           "w": 480
         },
         {
-          "src": "assets/images/photos/i-love-cs-960.webp",
+          "src": "assets/images/photos/general-info-presentation-960.webp",
           "w": 960
         },
         {
-          "src": "assets/images/photos/i-love-cs-1067.webp",
+          "src": "assets/images/photos/general-info-presentation-1067.webp",
           "w": 1067
         }
       ],
       "width": 1067,
       "height": 800,
-      "alt": "Members smiling and giving thumbs up behind an \"I love CS\" whiteboard sign.",
-      "caption": "We ♥ CS",
+      "alt": "Officers present the club's general information slide to a full computer lab.",
+      "caption": "Kickoff meeting",
       "inGallery": true,
-      "focus": "50% 45%"
+      "focus": "50% 55%"
     },
     {
       "id": "contest-trophies-team",
@@ -146,6 +146,30 @@
       "focus": "50% 55%"
     },
     {
+      "id": "i-love-cs",
+      "src": "assets/images/photos/i-love-cs-960.webp",
+      "srcset": [
+        {
+          "src": "assets/images/photos/i-love-cs-480.webp",
+          "w": 480
+        },
+        {
+          "src": "assets/images/photos/i-love-cs-960.webp",
+          "w": 960
+        },
+        {
+          "src": "assets/images/photos/i-love-cs-1067.webp",
+          "w": 1067
+        }
+      ],
+      "width": 1067,
+      "height": 800,
+      "alt": "Members smiling and giving thumbs up behind an \"I love CS\" whiteboard sign.",
+      "caption": "We ♥ CS",
+      "inGallery": false,
+      "focus": "50% 45%"
+    },
+    {
       "id": "intro-to-java",
       "src": "assets/images/photos/intro-to-java-960.webp",
       "srcset": [
@@ -192,30 +216,6 @@
       "caption": "Data structures practice",
       "inGallery": false,
       "focus": "45% 50%"
-    },
-    {
-      "id": "general-info-presentation",
-      "src": "assets/images/photos/general-info-presentation-960.webp",
-      "srcset": [
-        {
-          "src": "assets/images/photos/general-info-presentation-480.webp",
-          "w": 480
-        },
-        {
-          "src": "assets/images/photos/general-info-presentation-960.webp",
-          "w": 960
-        },
-        {
-          "src": "assets/images/photos/general-info-presentation-1067.webp",
-          "w": 1067
-        }
-      ],
-      "width": 1067,
-      "height": 800,
-      "alt": "Officers present the club's general information slide to a full computer lab.",
-      "caption": "Kickoff meeting",
-      "inGallery": false,
-      "focus": "50% 55%"
     },
     {
       "id": "members-in-lab",

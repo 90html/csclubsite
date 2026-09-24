@@ -7,7 +7,7 @@ export const PAGES = [
     file: 'index.html',
     path: '',
     nav: 'Home',
-    title: 'Dulles Computer Science Club: Learn to Code, Compete, Build',
+    title: 'Dulles Computer Science Club',
     description:
       'The Dulles High School Computer Science Club: weekly meetings, Java from zero, competitive programming and UIL contests. Beginners welcome.',
   },
@@ -41,7 +41,7 @@ export const PAGES = [
     file: 'points/index.html',
     path: 'points/',
     nav: 'Points',
-    title: 'Points & Leaderboard · Dulles Computer Science Club',
+    title: 'Points Leaderboard · Dulles Computer Science Club',
     description: 'Look up your DHS CS Club points for meetings, problems and contests, and see the live leaderboard.',
   },
   {
@@ -49,7 +49,7 @@ export const PAGES = [
     file: 'officers/index.html',
     path: 'officers/',
     nav: 'Officers',
-    title: 'Officers · Dulles Computer Science Club',
+    title: 'Club Officers & Sponsors · Dulles Computer Science Club',
     description: 'Meet the student officers and faculty sponsors who run the Dulles High School Computer Science Club.',
   },
   {
@@ -66,7 +66,7 @@ let markId = 0;
 /** The club logo mark: a gradient </> in a rounded tile. */
 export function logoMark(cls = 'brand__mark') {
   const id = `lg${++markId}`;
-  return `<svg class="${cls}" viewBox="0 0 40 40" aria-hidden="true" focusable="false"><defs><linearGradient id="${id}" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#bd1a3a"/><stop offset=".5" stop-color="#d4213f"/><stop offset="1" stop-color="#f0506a"/></linearGradient></defs><rect x="1" y="1" width="38" height="38" rx="11" fill="#0c1530" stroke="url(#${id})" stroke-width="1.5"/><path d="M14.5 13.5 8.5 20l6 6.5M25.5 13.5l6 6.5-6 6.5M22.5 11.5l-5 17" fill="none" stroke="url(#${id})" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/></svg>`;
+  return `<svg class="${cls}" viewBox="0 0 40 40" aria-hidden="true" focusable="false"><defs><linearGradient id="${id}" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#e0304c"/><stop offset="1" stop-color="#e0304c"/></linearGradient></defs><rect x="1" y="1" width="38" height="38" rx="11" fill="#0c1530" stroke="url(#${id})" stroke-width="1.5"/><path d="M14.5 13.5 8.5 20l6 6.5M25.5 13.5l6 6.5-6 6.5M22.5 11.5l-5 17" fill="none" stroke="url(#${id})" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/></svg>`;
 }
 
 const esc = (s) => String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
@@ -113,7 +113,7 @@ export function headPartial(page, config, iconVersion = '') {
 <meta property="og:image" content="${esc(og)}${v}">
 <meta property="og:image:width" content="1200">
 <meta property="og:image:height" content="630">
-<meta property="og:image:alt" content="Dulles Computer Science Club: learn to code, compete, build.">
+<meta property="og:image:alt" content="The Dulles Computer Science Club">
 <meta name="twitter:card" content="summary_large_image">
 <meta name="twitter:title" content="${esc(page.title)}">
 <meta name="twitter:description" content="${esc(page.description)}">
@@ -171,7 +171,7 @@ export function footerPartial(page, config) {
     <div class="footer__grid">
       <div class="footer__about">
         <a class="brand" href="${href(PAGES[0])}" aria-label="DHS CS Club: home">${logoMark()}<span>${esc(config.CLUB_NAME)}</span></a>
-        <p>The computer science club at ${esc(config.SCHOOL.name)}, ${esc(config.SCHOOL.location)}. Learn to code, solve problems, and compete. Beginners are always welcome.</p>
+        <p>The computer science club at ${esc(config.SCHOOL.name)} in ${esc(config.SCHOOL.location)}.</p>
       </div>
       <div>
         <p class="footer__title">Explore</p>
